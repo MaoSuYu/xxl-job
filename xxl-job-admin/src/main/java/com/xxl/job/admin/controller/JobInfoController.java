@@ -120,6 +120,15 @@ public class JobInfoController {
 		return xxlJobService.start(id);
 	}
 	
+	/**
+	 * 手动触发任务的接口。
+	 *
+	 * @param request        HTTP请求对象，用于获取请求上下文。
+	 * @param id             任务的唯一标识符，用于指定要触发的任务。
+	 * @param executorParam  执行参数，传递给任务执行器。
+	 * @param addressList    执行器地址列表，用于覆盖默认的执行器地址。
+	 * @return               返回任务触发的结果，包含成功或失败的信息。
+	 */
 	@RequestMapping("/trigger")
 	@ResponseBody
 	public ReturnT<String> triggerJob(HttpServletRequest request,
@@ -127,9 +136,9 @@ public class JobInfoController {
 									  @RequestParam("executorParam") String executorParam,
 									  @RequestParam("addressList") String addressList) {
 
-		// login user
+		// 获取当前登录用户的信息
 		XxlJobUser loginUser = PermissionInterceptor.getLoginUser(request);
-		// trigger
+		// 调用服务层的trigger方法，执行任务触发逻辑
 		return xxlJobService.trigger(loginUser, id, executorParam, addressList);
 	}
 

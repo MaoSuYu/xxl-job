@@ -372,11 +372,18 @@ public class XxlJobServiceImpl implements XxlJobService {
 		return ReturnT.SUCCESS;
 	}
 
-
-
+	/**
+	 * 手动触发任务的方法。
+	 *
+	 * @param loginUser     当前登录的用户信息，用于权限验证。
+	 * @param jobId         任务的唯一标识符，用于指定要触发的任务。
+	 * @param executorParam 执行参数，传递给任务执行器。
+	 * @param addressList   执行器地址列表，用于覆盖默认的执行器地址。
+	 * @return              返回任务触发的结果，包含成功或失败的信息。
+	 */
 	@Override
 	public ReturnT<String> trigger(XxlJobUser loginUser, int jobId, String executorParam, String addressList) {
-		// permission
+		// 权限验证，确保用户有权限触发该任务
 		if (loginUser == null) {
 			return new ReturnT<String>(ReturnT.FAIL.getCode(), I18nUtil.getString("system_permission_limit"));
 		}
@@ -388,11 +395,12 @@ public class XxlJobServiceImpl implements XxlJobService {
 			return new ReturnT<String>(ReturnT.FAIL.getCode(), I18nUtil.getString("system_permission_limit"));
 		}
 
-		// force cover job param
+		// 强制覆盖任务参数
 		if (executorParam == null) {
 			executorParam = "";
 		}
 
+		// 使用JobTriggerPoolHelper触发任务
 		JobTriggerPoolHelper.trigger(jobId, TriggerTypeEnum.MANUAL, -1, null, executorParam, addressList);
 		return ReturnT.SUCCESS;
 	}
