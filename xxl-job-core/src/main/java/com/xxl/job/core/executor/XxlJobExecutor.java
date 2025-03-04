@@ -314,9 +314,10 @@ public class XxlJobExecutor  {
         JobThread newJobThread = new JobThread(jobId, handler);
         newJobThread.start();
         logger.info(">>>>>>>>>>> xxl-job regist JobThread success, jobId:{}, handler:{}", new Object[]{jobId, handler});
-
+        // 如果还存在旧的任务则直接打断
         JobThread oldJobThread = jobThreadRepository.put(jobId, newJobThread);	// putIfAbsent | oh my god, map's put method return the old value!!!
         if (oldJobThread != null) {
+            logger.warn("准备打断旧的任务...");
             oldJobThread.toStop(removeOldReason);
             oldJobThread.interrupt();
         }
