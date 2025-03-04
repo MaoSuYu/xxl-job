@@ -23,24 +23,59 @@ import org.slf4j.LoggerFactory;
 import java.util.concurrent.*;
 
 /**
+ * 嵌入式服务器类
+ * 
+ * 该类用于启动一个基于 Netty 的 HTTP 服务器，
+ * 负责接收调度中心的请求并进行处理。
+ * 
+ * 工作原理：
+ * 1. 使用 Netty 启动一个 HTTP 服务器，监听指定端口。
+ * 2. 通过线程池处理接收到的请求，确保高并发处理能力。
+ * 3. 支持心跳检测、任务执行、任务终止、日志查询等功能。
+ * 4. 通过 ExecutorBizImpl 实现具体的业务逻辑。
+ * 
+ * 关键组件：
+ * - ServerBootstrap：Netty 服务器启动器，用于配置和启动服务器。
+ * - NioEventLoopGroup：Netty 的事件循环组，负责处理连接的接入和数据读写。
+ * - ThreadPoolExecutor：线程池，用于处理业务逻辑，避免阻塞 Netty 的 I/O 线程。
+ * - EmbedHttpServerHandler：Netty 的通道处理器，负责解析 HTTP 请求并调用业务逻辑。
+ * 
+ * 该类的设计确保了高效的网络通信和灵活的业务处理能力。
+ * 
  * Copy from : https://github.com/xuxueli/xxl-rpc
- *
- * @author xuxueli 2020-04-11 21:25
+ * 
+ * 作者：xuxueli 2020-04-11 21:25
  */
 public class EmbedServer {
     private static final Logger logger = LoggerFactory.getLogger(EmbedServer.class);
 
+    // 执行业务接口，用于处理具体的业务逻辑
     private ExecutorBiz executorBiz;
+    // 服务器线程，用于启动和管理服务器的生命周期
     private Thread thread;
 
+    /**
+     * 启动嵌入式服务器
+     * 
+     * @param address     服务器地址
+     * @param port        服务器端口
+     * @param appname     应用名称
+     * @param accessToken 访问令牌
+     * 
+     * 该方法初始化并启动一个 Netty HTTP 服务器，
+     * 并通过线程池处理业务请求。
+     */
     public void start(final String address, final int port, final String appname, final String accessToken) {
+        // 实例化业务处理接口
         executorBiz = new ExecutorBizImpl();
+        // 创建并启动服务器线程
         thread = new Thread(new Runnable() {
             @Override
             public void run() {
-                // param
+                // 初始化 Netty 的事件循环组
                 EventLoopGroup bossGroup = new NioEventLoopGroup();
                 EventLoopGroup workerGroup = new NioEventLoopGroup();
+                // 创建业务线程池，处理业务逻辑
                 ThreadPoolExecutor bizThreadPool = new ThreadPoolExecutor(
                         0,
                         200,
@@ -60,7 +95,7 @@ public class EmbedServer {
                             }
                         });
                 try {
-                    // start server
+                    // 配置并启动 Netty 服务器
                     ServerBootstrap bootstrap = new ServerBootstrap();
                     bootstrap.group(bossGroup, workerGroup)
                             .channel(NioServerSocketChannel.class)
@@ -68,23 +103,23 @@ public class EmbedServer {
                                 @Override
                                 public void initChannel(SocketChannel channel) throws Exception {
                                     channel.pipeline()
-                                            .addLast(new IdleStateHandler(0, 0, 30 * 3, TimeUnit.SECONDS))  // beat 3N, close if idle
+                                            .addLast(new IdleStateHandler(0, 0, 30 * 3, TimeUnit.SECONDS))  // 心跳检测，空闲时关闭连接
                                             .addLast(new HttpServerCodec())
-                                            .addLast(new HttpObjectAggregator(5 * 1024 * 1024))  // merge request & reponse to FULL
+                                            .addLast(new HttpObjectAggregator(5 * 1024 * 1024))  // 聚合 HTTP 请求和响应
                                             .addLast(new EmbedHttpServerHandler(executorBiz, accessToken, bizThreadPool));
                                 }
                             })
                             .childOption(ChannelOption.SO_KEEPALIVE, true);
 
-                    // bind
+                    // 绑定端口并启动
                     ChannelFuture future = bootstrap.bind(port).sync();
 
                     logger.info(">>>>>>>>>>> xxl-job remoting server start success, nettype = {}, port = {}", EmbedServer.class, port);
 
-                    // start registry
+                    // 启动注册线程
                     startRegistry(appname, address);
 
-                    // wait util stop
+                    // 等待服务器关闭
                     future.channel().closeFuture().sync();
 
                 } catch (InterruptedException e) {
@@ -92,7 +127,7 @@ public class EmbedServer {
                 } catch (Throwable e) {
                     logger.error(">>>>>>>>>>> xxl-job remoting server error.", e);
                 } finally {
-                    // stop
+                    // 关闭事件循环组
                     try {
                         workerGroup.shutdownGracefully();
                         bossGroup.shutdownGracefully();
@@ -102,30 +137,33 @@ public class EmbedServer {
                 }
             }
         });
-        thread.setDaemon(true);    // daemon, service jvm, user thread leave >>> daemon leave >>> jvm leave
+        thread.setDaemon(true);    // 设置为守护线程，确保 JVM 退出时自动关闭
         thread.start();
     }
 
+    /**
+     * 停止嵌入式服务器
+     * 
+     * 该方法用于停止服务器线程并注销注册信息。
+     */
     public void stop() throws Exception {
-        // destroy server thread
+        // 销毁服务器线程
         if (thread != null && thread.isAlive()) {
             thread.interrupt();
         }
 
-        // stop registry
+        // 停止注册
         stopRegistry();
         logger.info(">>>>>>>>>>> xxl-job remoting server destroy success.");
     }
 
-
     // ---------------------- registry ----------------------
 
     /**
-     * netty_http
-     * <p>
-     * Copy from : https://github.com/xuxueli/xxl-rpc
-     *
-     * @author xuxueli 2015-11-24 22:25:15
+     * 嵌入式 HTTP 服务器处理器
+     * 
+     * 该类负责处理 HTTP 请求，解析请求数据并调用相应的业务逻辑。
+     * 支持的请求包括心跳检测、任务执行、任务终止、日志查询等。
      */
     public static class EmbedHttpServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
         private static final Logger logger = LoggerFactory.getLogger(EmbedHttpServerHandler.class);
@@ -142,32 +180,31 @@ public class EmbedServer {
 
         @Override
         protected void channelRead0(final ChannelHandlerContext ctx, FullHttpRequest msg) throws Exception {
-            // request parse
-            //final byte[] requestBytes = ByteBufUtil.getBytes(msg.content());    // byteBuf.toString(io.netty.util.CharsetUtil.UTF_8);
+            // 解析请求
             String requestData = msg.content().toString(CharsetUtil.UTF_8);
             String uri = msg.uri();
             HttpMethod httpMethod = msg.method();
             boolean keepAlive = HttpUtil.isKeepAlive(msg);
             String accessTokenReq = msg.headers().get(XxlJobRemotingUtil.XXL_JOB_ACCESS_TOKEN);
 
-            // invoke
+            // 执行业务逻辑
             bizThreadPool.execute(new Runnable() {
                 @Override
                 public void run() {
-                    // do invoke
+                    // 调用相应的业务逻辑
                     Object responseObj = process(httpMethod, uri, requestData, accessTokenReq);
 
-                    // to json
+                    // 转换为 JSON
                     String responseJson = GsonTool.toJson(responseObj);
 
-                    // write response
+                    // 写入响应
                     writeResponse(ctx, keepAlive, responseJson);
                 }
             });
         }
 
         private Object process(HttpMethod httpMethod, String uri, String requestData, String accessTokenReq) {
-            // valid
+            // 验证请求
             if (HttpMethod.POST != httpMethod) {
                 return new ReturnT<String>(ReturnT.FAIL_CODE, "invalid request, HttpMethod not support.");
             }
@@ -180,7 +217,7 @@ public class EmbedServer {
                 return new ReturnT<String>(ReturnT.FAIL_CODE, "The access token is wrong.");
             }
 
-            // services mapping
+            // 服务映射
             try {
                 switch (uri) {
                     case "/beat":
@@ -207,10 +244,10 @@ public class EmbedServer {
         }
 
         /**
-         * write response
+         * 写入响应
          */
         private void writeResponse(ChannelHandlerContext ctx, boolean keepAlive, String responseJson) {
-            // write response
+            // 写入响应
             FullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, Unpooled.copiedBuffer(responseJson, CharsetUtil.UTF_8));   //  Unpooled.wrappedBuffer(responseJson)
             response.headers().set(HttpHeaderNames.CONTENT_TYPE, "text/html;charset=UTF-8");       // HttpHeaderValues.TEXT_PLAIN.toString()
             response.headers().set(HttpHeaderNames.CONTENT_LENGTH, response.content().readableBytes());
@@ -234,7 +271,7 @@ public class EmbedServer {
         @Override
         public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
             if (evt instanceof IdleStateEvent) {
-                ctx.channel().close();      // beat 3N, close if idle
+                ctx.channel().close();      // 心跳检测，空闲时关闭连接
                 logger.debug(">>>>>>>>>>> xxl-job provider netty_http server close an idle channel.");
             } else {
                 super.userEventTriggered(ctx, evt);
@@ -244,13 +281,28 @@ public class EmbedServer {
 
     // ---------------------- registry ----------------------
 
+    /**
+     * 启动注册线程
+     * 
+     * @param appname 应用名称
+     * @param address 服务器地址
+     * 
+     * 该方法启动一个注册线程，
+     * 用于将执行器注册到调度中心。
+     */
     public void startRegistry(final String appname, final String address) {
-        // start registry
+        // 启动注册
         ExecutorRegistryThread.getInstance().start(appname, address);
     }
 
+    /**
+     * 停止注册线程
+     * 
+     * 该方法用于停止注册线程，
+     * 取消执行器在调度中心的注册。
+     */
     public void stopRegistry() {
-        // stop registry
+        // 停止注册
         ExecutorRegistryThread.getInstance().toStop();
     }
 }
