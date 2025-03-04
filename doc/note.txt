@@ -1,3 +1,4 @@
 com.xxl.job.core.biz.impl.ExecutorBizImpl 执行器核心功能的具体实现。
 com.xxl.job.admin.core.scheduler.XxlJobScheduler 调度器核心类,负责调度系统的初始化、启动和销毁
 com.xxl.job.admin.core.thread.JobTriggerPoolHelper 向客户端执行器下发执行请求的核心类
+com.xxl.job.admin.core.thread.JobRegistryHelper.freshGroupRegistryInfo  该方法需要自己在xxl_job_group注册组
