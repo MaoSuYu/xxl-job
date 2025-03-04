@@ -42,6 +42,18 @@ public class SampleXxlJob {
         Thread.sleep(Long.MAX_VALUE);
     }
 
+    @XxlJob("demoJobHandler1")
+    public void demoJobHandler1() throws Exception {
+        System.out.println("1 = " + 1);
+
+    }
+
+    @XxlJob("demoJobHandler3")
+    public void demoJobHandler3() throws Exception {
+        System.out.println("3 = " + 3);
+
+    }
+
 
     /**
      * 2、分片广播任务
