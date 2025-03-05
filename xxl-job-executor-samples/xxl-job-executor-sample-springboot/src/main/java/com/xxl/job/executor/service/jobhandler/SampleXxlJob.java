@@ -39,7 +39,7 @@ public class SampleXxlJob {
     @XxlJob("demoJobHandler")
     public void demoJobHandler() throws Exception {
         System.err.println("框架执行");
-        Thread.sleep(Long.MAX_VALUE);
+        throw new RuntimeException();
     }
 
     @XxlJob("demoJobHandler1")
