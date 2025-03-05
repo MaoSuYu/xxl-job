@@ -59,6 +59,19 @@
 
 	</insert>
 
+	<select id="loadGroupAddress" resultType="com.xxl.job.admin.core.model.JobRegistryEntity">
+		SELECT
+			registry_value as registryValue,
+			thread_running_count as threadRunningCount,
+			max_thread_count as maxThreadCount,
+			(max_thread_count - thread_running_count) AS remainingThreadCount
+		FROM
+			xxl_job_registry
+		WHERE
+			FIND_IN_SET(registry_value, (SELECT address_list FROM xxl_job_group WHERE id = #{groupId})) > 0;
+
+    </select>
+
 	<!--
     <update id="registryUpdate" >
         UPDATE xxl_job_registry

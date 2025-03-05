@@ -29,7 +29,13 @@ public class ReturnT<T> implements Serializable {
 		this.code = SUCCESS_CODE;
 		this.content = content;
 	}
-	
+
+	public ReturnT(int code, String msg, T content) {
+		this.code = code;
+		this.msg = msg;
+		this.content = content;
+	}
+
 	public int getCode() {
 		return code;
 	}

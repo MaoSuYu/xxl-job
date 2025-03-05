@@ -1,5 +1,6 @@
 package com.xxl.job.admin.dao;
 
+import com.xxl.job.admin.core.model.JobRegistryEntity;
 import com.xxl.job.admin.core.model.XxlJobRegistry;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -29,6 +30,8 @@ public interface XxlJobRegistryDao {
             @Param("threadRunningCount") int threadRunningCount,
             @Param("maxThreadCount") int maxThreadCount
     );
+
+    public List<JobRegistryEntity> loadGroupAddress(@Param("groupId") int groupId);
 
 
     /*public int registryUpdate(@Param("registryGroup") String registryGroup,

@@ -79,9 +79,8 @@ public class ExecutorRegistryThread {
 
                         // 构建注册参数
                         RegistryParam registryParam = new RegistryParam(RegistryConfig.RegistType.EXECUTOR.name(), appname, address, runningTaskCount, ThreadConstant.MAX_THREAD_COUNT);
-                        int maxPoolSize = 200;  // EmbedServer中配置的最大线程池大小
-                        logger.info(">>>>>>>>>>> xxl-job, 执行器当前状态->作业线程数={}, 正在执行的任务数={}, 等待执行的任务数={}, 执行器最大线程容量={}",
-                                threadCount, runningTaskCount, pendingTaskCount, maxPoolSize);
+                        logger.debug(">>>>>>>>>>> xxl-job, 执行器当前状态->作业线程数={}, 正在执行的任务数={}, 等待执行的任务数={}, 执行器最大线程容量={}",
+                                threadCount, runningTaskCount, pendingTaskCount, ThreadConstant.MAX_THREAD_COUNT);
                         
                         // 遍历所有配置的调度中心地址
                         for (AdminBiz adminBiz: XxlJobExecutor.getAdminBizList()) {

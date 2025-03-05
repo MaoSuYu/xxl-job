@@ -3,6 +3,7 @@ package com.xxl.job.core.biz.impl;
 import com.xxl.job.core.biz.ExecutorBiz;
 import com.xxl.job.core.biz.model.*;
 import com.xxl.job.core.enums.ExecutorBlockStrategyEnum;
+import com.xxl.job.core.enums.ThreadConstant;
 import com.xxl.job.core.executor.XxlJobExecutor;
 import com.xxl.job.core.glue.GlueFactory;
 import com.xxl.job.core.glue.GlueTypeEnum;
@@ -18,7 +19,7 @@ import java.util.Date;
 
 /**
  * 执行器实现类
- * 
+ * <p>
  * 该类实现了ExecutorBiz接口，是执行器核心功能的具体实现。
  * 主要职责包括：
  * 1. 处理调度中心的心跳检测
@@ -31,7 +32,7 @@ public class ExecutorBizImpl implements ExecutorBiz {
 
     /**
      * 心跳检测
-     * 
+     * <p>
      * 用于调度中心检测执行器是否在线
      * 简单返回成功标识，代表执行器正常运行
      */
@@ -42,10 +43,10 @@ public class ExecutorBizImpl implements ExecutorBiz {
 
     /**
      * 空闲检测
-     * 
+     *
      * @param idleBeatParam 空闲检测参数，包含任务ID
      * @return ReturnT<String> 检测结果
-     * 
+     * <p>
      * 检查指定任务是否处于运行中或者在队列中
      * 如果任务正在运行或在队列中等待，返回失败，表示任务非空闲
      * 否则返回成功，表示任务处于空闲状态
@@ -71,16 +72,16 @@ public class ExecutorBizImpl implements ExecutorBiz {
 
     /**
      * 执行任务
-     * 
+     *
      * @param triggerParam 触发参数，包含任务执行的所有必要信息
      * @return ReturnT<String> 执行结果
-     * 
+     * <p>
      * 这是执行器的核心方法，负责：
      * 1. 根据任务类型（Bean、Glue、Script）加载或创建相应的任务处理器
      * 2. 处理任务阻塞策略（丢弃后续、覆盖之前）
      * 3. 维护任务线程的生命周期
      * 4. 将触发参数推送到任务线程的执行队列
-     * 
+     * <p>
      * 执行流程：
      * 1. 检查已存在的JobThread和JobHandler
      * 2. 根据GlueType创建或获取JobHandler
@@ -93,7 +94,7 @@ public class ExecutorBizImpl implements ExecutorBiz {
         // 获取已存在的任务线程和处理器，确保任务的连续性和状态管理
         JobThread jobThread = XxlJobExecutor.loadJobThread(triggerParam.getJobId());
         // 如果线程存在则获取其处理器，否则为null，确保处理器的正确性
-        IJobHandler jobHandler = jobThread!=null?jobThread.getHandler():null;
+        IJobHandler jobHandler = jobThread != null ? jobThread.getHandler() : null;
         // 用于记录需要移除旧线程的原因，便于调试和日志记录
         String removeOldReason = null;
 
@@ -106,7 +107,7 @@ public class ExecutorBizImpl implements ExecutorBiz {
             IJobHandler newJobHandler = XxlJobExecutor.loadJobHandler(triggerParam.getExecutorHandler());
 
             // 如果已存在的处理器与新的处理器不同，需要终止旧线程，避免资源浪费和状态不一致
-            if (jobThread!=null && jobHandler != newJobHandler) {
+            if (jobThread != null && jobHandler != newJobHandler) {
                 removeOldReason = "change jobhandler or glue type, and terminate the old job thread.";
                 // 清空当前线程和处理器，确保新的任务环境
                 jobThread = null;
@@ -128,7 +129,7 @@ public class ExecutorBizImpl implements ExecutorBiz {
             // 检查已存在的线程是否需要更新，确保任务逻辑的最新性
             if (jobThread != null &&
                     !(jobThread.getHandler() instanceof GlueJobHandler
-                        && ((GlueJobHandler) jobThread.getHandler()).getGlueUpdatetime()==triggerParam.getGlueUpdatetime() )) {
+                            && ((GlueJobHandler) jobThread.getHandler()).getGlueUpdatetime() == triggerParam.getGlueUpdatetime())) {
                 // 如果脚本已更新，需要终止旧线程，避免执行旧逻辑
                 removeOldReason = "change job source or glue type, and terminate the old job thread.";
                 jobThread = null;
@@ -147,13 +148,13 @@ public class ExecutorBizImpl implements ExecutorBiz {
                     return new ReturnT<String>(ReturnT.FAIL_CODE, e.getMessage());
                 }
             }
-        } else if (glueTypeEnum!=null && glueTypeEnum.isScript()) {
+        } else if (glueTypeEnum != null && glueTypeEnum.isScript()) {
             // 脚本类型任务（Shell、Python等），支持多种脚本语言
 
             // 检查脚本是否需要更新，确保执行最新的脚本
             if (jobThread != null &&
                     !(jobThread.getHandler() instanceof ScriptJobHandler
-                            && ((ScriptJobHandler) jobThread.getHandler()).getGlueUpdatetime()==triggerParam.getGlueUpdatetime() )) {
+                            && ((ScriptJobHandler) jobThread.getHandler()).getGlueUpdatetime() == triggerParam.getGlueUpdatetime())) {
                 // 脚本已更新，终止旧线程，避免执行旧脚本
                 removeOldReason = "change job source or glue type, and terminate the old job thread.";
                 jobThread = null;
@@ -176,7 +177,7 @@ public class ExecutorBizImpl implements ExecutorBiz {
             if (ExecutorBlockStrategyEnum.DISCARD_LATER == blockStrategy) {
                 // 丢弃后续调度：如果任务在执行或队列中有任务，直接返回失败，避免资源浪费
                 if (jobThread.isRunningOrHasQueue()) {
-                    return new ReturnT<String>(ReturnT.FAIL_CODE, "block strategy effect："+ExecutorBlockStrategyEnum.DISCARD_LATER.getTitle());
+                    return new ReturnT<String>(ReturnT.FAIL_CODE, "block strategy effect：" + ExecutorBlockStrategyEnum.DISCARD_LATER.getTitle());
                 }
             } else if (ExecutorBlockStrategyEnum.COVER_EARLY == blockStrategy) {
                 // 覆盖之前调度：如果任务在执行，终止当前任务，确保新任务的优先级
@@ -201,10 +202,10 @@ public class ExecutorBizImpl implements ExecutorBiz {
 
     /**
      * 终止任务
-     * 
+     *
      * @param killParam 终止参数，包含要终止的任务ID
      * @return ReturnT<String> 终止结果
-     * 
+     * <p>
      * 用于强制终止正在运行的任务：
      * 1. 根据任务ID获取对应的JobThread
      * 2. 如果线程存在，则移除该线程并终止任务
@@ -226,10 +227,10 @@ public class ExecutorBizImpl implements ExecutorBiz {
 
     /**
      * 查询任务日志
-     * 
+     *
      * @param logParam 日志查询参数，包含日志ID、时间戳和起始行号
      * @return ReturnT<LogResult> 日志查询结果
-     * 
+     * <p>
      * 用于读取任务执行的日志信息：
      * 1. 根据时间和日志ID构建日志文件名
      * 2. 从指定行号开始读取日志内容
@@ -243,6 +244,16 @@ public class ExecutorBizImpl implements ExecutorBiz {
         // 从指定行号开始读取日志内容，支持日志的增量读取
         LogResult logResult = XxlJobFileAppender.readLog(logFileName, logParam.getFromLineNum());
         return new ReturnT<LogResult>(logResult);
+    }
+
+    @Override
+    public ReturnT<ExecutorStatus> status() {
+        ExecutorStatus status = new ExecutorStatus(
+                ThreadConstant.MAX_THREAD_COUNT,
+                XxlJobExecutor.getRunningTaskCount(),
+                XxlJobExecutor.getPendingTaskCount()
+        );
+        return new ReturnT<ExecutorStatus>(status);
     }
 
 }

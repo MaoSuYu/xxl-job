@@ -42,4 +42,11 @@ public interface ExecutorBiz {
      */
     public ReturnT<LogResult> log(LogParam logParam);
 
+    /**
+     * 获取执行器状态
+     * 
+     * @return 执行器状态信息，包括作业线程数、正在执行的任务数和等待执行的任务数
+     */
+    public ReturnT<ExecutorStatus> status();
+
 }

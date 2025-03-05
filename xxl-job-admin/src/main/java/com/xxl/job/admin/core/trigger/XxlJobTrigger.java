@@ -1,6 +1,7 @@
 package com.xxl.job.admin.core.trigger;
 
 import com.xxl.job.admin.core.conf.XxlJobAdminConfig;
+import com.xxl.job.admin.core.model.JobRegistryEntity;
 import com.xxl.job.admin.core.model.XxlJobGroup;
 import com.xxl.job.admin.core.model.XxlJobInfo;
 import com.xxl.job.admin.core.model.XxlJobLog;
@@ -17,6 +18,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * xxl-job trigger
@@ -59,6 +63,14 @@ public class XxlJobTrigger {
         }
         int finalFailRetryCount = failRetryCount>=0?failRetryCount:jobInfo.getExecutorFailRetryCount();
         XxlJobGroup group = XxlJobAdminConfig.getAdminConfig().getXxlJobGroupDao().load(jobInfo.getJobGroup());
+        // 拿到节点正在运行的线程和总线程数量
+        Map<String, JobRegistryEntity> addressInfo = XxlJobAdminConfig.getAdminConfig().getXxlJobRegistryDao().loadGroupAddress(jobInfo.getJobGroup()).stream()
+                .collect(Collectors.toMap(
+                        JobRegistryEntity::getRegistryValue,
+                        entity -> entity,
+                        (existing, replacement) -> existing // 处理键冲突的情况
+                ));
+        group.setAddressInfoMap(addressInfo);
 
         // cover addressList
         if (addressList!=null && addressList.trim().length()>0) {
