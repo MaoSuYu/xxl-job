@@ -10,6 +10,6 @@ public class ThreadConstant {
     /**
      * job thread最多存活多久
      */
-    public static final int ATTEMPTS = 3;
+    public static final int ATTEMPTS = 1;
 
 }

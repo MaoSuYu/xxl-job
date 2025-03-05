@@ -11,12 +11,22 @@ public class RegistryParam implements Serializable {
     private String registryGroup;
     private String registryKey;
     private String registryValue;
+    private int threadRunningCount;
+    private int maxThreadCount;
 
     public RegistryParam(){}
     public RegistryParam(String registryGroup, String registryKey, String registryValue) {
         this.registryGroup = registryGroup;
         this.registryKey = registryKey;
         this.registryValue = registryValue;
+    }
+
+    public RegistryParam(String registryGroup, String registryKey, String registryValue, int threadRunningCount, int maxThreadCount) {
+        this.registryGroup = registryGroup;
+        this.registryKey = registryKey;
+        this.registryValue = registryValue;
+        this.threadRunningCount = threadRunningCount;
+        this.maxThreadCount = maxThreadCount;
     }
 
     public String getRegistryGroup() {
@@ -43,12 +53,30 @@ public class RegistryParam implements Serializable {
         this.registryValue = registryValue;
     }
 
+    public int getThreadRunningCount() {
+        return threadRunningCount;
+    }
+
+    public void setThreadRunningCount(int threadRunningCount) {
+        this.threadRunningCount = threadRunningCount;
+    }
+
+    public int getMaxThreadCount() {
+        return maxThreadCount;
+    }
+
+    public void setMaxThreadCount(int maxThreadCount) {
+        this.maxThreadCount = maxThreadCount;
+    }
+
     @Override
     public String toString() {
         return "RegistryParam{" +
                 "registryGroup='" + registryGroup + '\'' +
                 ", registryKey='" + registryKey + '\'' +
                 ", registryValue='" + registryValue + '\'' +
+                ", threadRunningCount=" + threadRunningCount +
+                ", maxThreadCount=" + maxThreadCount +
                 '}';
     }
 }

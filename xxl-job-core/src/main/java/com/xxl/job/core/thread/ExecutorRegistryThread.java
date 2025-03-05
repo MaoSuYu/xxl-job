@@ -4,6 +4,7 @@ import com.xxl.job.core.biz.AdminBiz;
 import com.xxl.job.core.biz.model.RegistryParam;
 import com.xxl.job.core.biz.model.ReturnT;
 import com.xxl.job.core.enums.RegistryConfig;
+import com.xxl.job.core.enums.ThreadConstant;
 import com.xxl.job.core.executor.XxlJobExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,15 +72,15 @@ public class ExecutorRegistryThread {
                 // 注册循环：定期发送心跳包
                 while (!toStop) {
                     try {
-                        // 构建注册参数
-                        RegistryParam registryParam = new RegistryParam(RegistryConfig.RegistType.EXECUTOR.name(), appname, address);
-                        
                         // 打印当前执行器的任务状态
                         int threadCount = XxlJobExecutor.getRunningJobThreadCount();
                         int runningTaskCount = XxlJobExecutor.getRunningTaskCount();
                         int pendingTaskCount = XxlJobExecutor.getPendingTaskCount();
+
+                        // 构建注册参数
+                        RegistryParam registryParam = new RegistryParam(RegistryConfig.RegistType.EXECUTOR.name(), appname, address, runningTaskCount, ThreadConstant.MAX_THREAD_COUNT);
                         int maxPoolSize = 200;  // EmbedServer中配置的最大线程池大小
-                        logger.info(">>>>>>>>>>> xxl-job, 执行器当前状态: 作业线程数={}, 正在执行的任务数={}, 等待执行的任务数={}, 执行器最大线程容量={}",
+                        logger.info(">>>>>>>>>>> xxl-job, 执行器当前状态->作业线程数={}, 正在执行的任务数={}, 等待执行的任务数={}, 执行器最大线程容量={}",
                                 threadCount, runningTaskCount, pendingTaskCount, maxPoolSize);
                         
                         // 遍历所有配置的调度中心地址

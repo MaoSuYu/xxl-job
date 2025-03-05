@@ -40,10 +40,23 @@
 	</select>
 
 	<insert id="registrySaveOrUpdate" >
-		INSERT INTO xxl_job_registry( `registry_group` , `registry_key` , `registry_value`, `update_time`)
-		VALUES( #{registryGroup}  , #{registryKey} , #{registryValue}, #{updateTime})
-		ON DUPLICATE KEY UPDATE
-			`update_time` = #{updateTime}
+		INSERT INTO xxl_job_registry (`registry_group`,
+									  `registry_key`,
+									  `registry_value`,
+									  `update_time`,
+									  `thread_running_count`,
+									  `max_thread_count`)
+		VALUES (#{registryGroup},
+				#{registryKey},
+				#{registryValue},
+				#{updateTime},
+				#{threadRunningCount},
+				#{maxThreadCount}) ON DUPLICATE KEY
+		UPDATE
+			`update_time` = #{updateTime},
+			`thread_running_count` = #{threadRunningCount},
+			`max_thread_count` = #{maxThreadCount};
+
 	</insert>
 
 	<!--

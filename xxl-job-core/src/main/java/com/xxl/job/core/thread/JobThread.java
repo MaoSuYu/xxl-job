@@ -158,7 +158,7 @@ public class JobThread extends Thread{
             try {
 				// 从队列中获取任务触发参数，设置超时以便检查停止信号
 				// 使用poll而不是take，以便定期检查toStop标志
-				triggerParam = triggerQueue.poll(3L, TimeUnit.SECONDS);
+				triggerParam = triggerQueue.poll(1L, TimeUnit.SECONDS);
 				if (triggerParam!=null) {
 					// 设置执行状态和计数器
 					running = true;
@@ -241,13 +241,17 @@ public class JobThread extends Thread{
 					);
 
 				} else {
-					// 任务队列为空，检查空闲时间
-					if (idleTimes > ThreadConstant.ATTEMPTS) {
-						// 空闲超过30次且队列为空，移除任务线程
-						if(triggerQueue.size() == 0) {	// avoid concurrent trigger causes jobId-lost
-							XxlJobExecutor.removeJobThread(jobId, "excutor idle times over limit.");
-						}
+					// 这里修改源码，当任务结束且队列为空立马关闭线程
+					if(triggerQueue.size() == 0) {	// avoid concurrent trigger causes jobId-lost
+						XxlJobExecutor.removeJobThread(jobId, "长时间未获取到任务，终止工作线程！");
 					}
+					// 任务队列为空，检查空闲时间
+//					if (idleTimes > ThreadConstant.ATTEMPTS) {
+//						// 空闲超过30次且队列为空，移除任务线程
+//						if(triggerQueue.size() == 0) {	// avoid concurrent trigger causes jobId-lost
+//							XxlJobExecutor.removeJobThread(jobId, "长时间未获取到任务，终止工作线程！");
+//						}
+//					}
 				}
 			} catch (Throwable e) {
 				// 检查是否是由于停止信号导致的异常
@@ -313,6 +317,6 @@ public class JobThread extends Thread{
 		}
 
 		// 记录线程停止日志
-		logger.info(">>>>>>>>>>> xxl-job JobThread stoped, hashCode:{}", Thread.currentThread());
+		logger.info("工作线程已停止, thread name:{}", Thread.currentThread());
 	}
 }
