@@ -347,4 +347,42 @@ public class XxlJobExecutor  {
     public static JobThread loadJobThread(int jobId){
         return jobThreadRepository.get(jobId);
     }
+
+    /**
+     * 获取当前正在运行的作业线程数量
+     * 
+     * @return 作业线程数量
+     */
+    public static int getRunningJobThreadCount(){
+        return jobThreadRepository.size();
+    }
+
+    /**
+     * 获取当前正在执行的任务数量
+     * 包括正在运行的任务和队列中等待的任务
+     * 
+     * @return 正在执行的任务数量
+     */
+    public static int getRunningTaskCount(){
+        int count = 0;
+        for (JobThread jobThread : jobThreadRepository.values()) {
+            if (jobThread.isRunningOrHasQueue()) {
+                count++;
+            }
+        }
+        return count;
+    }
+    
+    /**
+     * 获取当前所有任务线程中等待执行的触发任务数量
+     * 
+     * @return 等待执行的触发任务数量
+     */
+    public static int getPendingTaskCount(){
+        int count = 0;
+        for (JobThread jobThread : jobThreadRepository.values()) {
+            count += jobThread.getPendingTriggerQueueSize();
+        }
+        return count;
+    }
 }

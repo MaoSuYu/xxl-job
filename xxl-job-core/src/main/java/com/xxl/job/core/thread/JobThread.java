@@ -5,6 +5,7 @@ import com.xxl.job.core.biz.model.ReturnT;
 import com.xxl.job.core.biz.model.TriggerParam;
 import com.xxl.job.core.context.XxlJobContext;
 import com.xxl.job.core.context.XxlJobHelper;
+import com.xxl.job.core.enums.ThreadConstant;
 import com.xxl.job.core.executor.XxlJobExecutor;
 import com.xxl.job.core.handler.IJobHandler;
 import com.xxl.job.core.log.XxlJobFileAppender;
@@ -126,6 +127,15 @@ public class JobThread extends Thread{
     }
 
     /**
+     * 获取等待执行的触发任务队列大小
+     * 
+     * @return 触发队列大小
+     */
+    public int getPendingTriggerQueueSize() {
+        return triggerQueue.size();
+    }
+
+    /**
      * 线程执行入口
      * 实现了任务的执行、超时控制和回调处理等核心逻辑
      */
@@ -232,7 +242,7 @@ public class JobThread extends Thread{
 
 				} else {
 					// 任务队列为空，检查空闲时间
-					if (idleTimes > 30) {
+					if (idleTimes > ThreadConstant.ATTEMPTS) {
 						// 空闲超过30次且队列为空，移除任务线程
 						if(triggerQueue.size() == 0) {	// avoid concurrent trigger causes jobId-lost
 							XxlJobExecutor.removeJobThread(jobId, "excutor idle times over limit.");

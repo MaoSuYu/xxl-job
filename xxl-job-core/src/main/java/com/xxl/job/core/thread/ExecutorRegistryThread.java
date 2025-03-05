@@ -8,6 +8,7 @@ import com.xxl.job.core.executor.XxlJobExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -72,6 +73,15 @@ public class ExecutorRegistryThread {
                     try {
                         // 构建注册参数
                         RegistryParam registryParam = new RegistryParam(RegistryConfig.RegistType.EXECUTOR.name(), appname, address);
+                        
+                        // 打印当前执行器的任务状态
+                        int threadCount = XxlJobExecutor.getRunningJobThreadCount();
+                        int runningTaskCount = XxlJobExecutor.getRunningTaskCount();
+                        int pendingTaskCount = XxlJobExecutor.getPendingTaskCount();
+                        int maxPoolSize = 200;  // EmbedServer中配置的最大线程池大小
+                        logger.info(">>>>>>>>>>> xxl-job, 执行器当前状态: 作业线程数={}, 正在执行的任务数={}, 等待执行的任务数={}, 执行器最大线程容量={}",
+                                threadCount, runningTaskCount, pendingTaskCount, maxPoolSize);
+                        
                         // 遍历所有配置的调度中心地址
                         for (AdminBiz adminBiz: XxlJobExecutor.getAdminBizList()) {
                             try {
@@ -169,4 +179,6 @@ public class ExecutorRegistryThread {
             }
         }
     }
+
+
 }

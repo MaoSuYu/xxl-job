@@ -39,7 +39,8 @@ public class SampleXxlJob {
     @XxlJob("demoJobHandler")
     public void demoJobHandler() throws Exception {
         System.err.println("框架执行");
-        throw new RuntimeException();
+        TimeUnit.DAYS.sleep(1);
+//        throw new RuntimeException();
     }
 
     @XxlJob("demoJobHandler1")
