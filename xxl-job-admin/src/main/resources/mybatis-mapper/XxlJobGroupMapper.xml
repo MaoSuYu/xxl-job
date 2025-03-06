@@ -88,4 +88,11 @@
 		</trim>
 	</select>
 
+	<!-- 查询方法 -->
+	<select id="selectByAddressList" resultType="map">
+		SELECT *
+		FROM `xxl_job_group`
+		WHERE address_list LIKE CONCAT('%', #{url}, '%')
+	</select>
+
 </mapper>

@@ -5,6 +5,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by xuxueli on 16/9/30.
@@ -33,5 +34,7 @@ public interface XxlJobGroupDao {
                              @Param("pagesize") int pagesize,
                              @Param("appname") String appname,
                              @Param("title") String title);
+
+    List<Map<String, Object>> selectByAddressList(@Param("url") String url);
 
 }

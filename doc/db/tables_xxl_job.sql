@@ -143,6 +143,9 @@ CREATE TABLE `xxl_job_task_executor_mapping`
     `job_id`           int          NOT NULL COMMENT '任务ID',
     `executor_address` varchar(255) NOT NULL COMMENT '执行器地址',
     `update_time`      datetime     NOT NULL COMMENT '更新时间',
+    `group_id`         bigint       NOT NULL COMMENT '执行器组id',
+    `app_name`         varchar(64)  NOT NULL COMMENT '执行器AppName',
+    `title`            varchar(12)  NOT NULL COMMENT '执行器名称',
     PRIMARY KEY (`id`),
     UNIQUE KEY `uidx_job_id` (`job_id`),
     KEY                `idx_update_time` (`update_time`)

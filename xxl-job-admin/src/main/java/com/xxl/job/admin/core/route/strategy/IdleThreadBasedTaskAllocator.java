@@ -4,6 +4,7 @@ import com.xxl.job.admin.core.model.XxlJobTaskExecutorMapping;
 import com.xxl.job.admin.core.route.ExecutorRouter;
 import com.xxl.job.admin.core.scheduler.XxlJobScheduler;
 import com.xxl.job.admin.core.util.I18nUtil;
+import com.xxl.job.admin.dao.XxlJobGroupDao;
 import com.xxl.job.admin.dao.XxlJobTaskExecutorMappingMapper;
 import com.xxl.job.admin.util.SpringContextUtil;
 import com.xxl.job.core.biz.ExecutorBiz;
@@ -19,12 +20,15 @@ import javax.sql.DataSource;
 import java.io.Serial;
 import java.sql.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ThreadPoolExecutor;
 
 public class IdleThreadBasedTaskAllocator extends ExecutorRouter {
 
     private static ThreadPoolTaskExecutor taskExecutor;
     private static XxlJobTaskExecutorMappingMapper xxlJobTaskExecutorMappingMapper;
+    private static XxlJobGroupDao xxlJobGroupDao;
 
     static {
         // 初始化线程池
@@ -38,6 +42,7 @@ public class IdleThreadBasedTaskAllocator extends ExecutorRouter {
 
         // 获取Mapper
         xxlJobTaskExecutorMappingMapper = SpringContextUtil.getBean(XxlJobTaskExecutorMappingMapper.class);
+        xxlJobGroupDao = SpringContextUtil.getBean(XxlJobGroupDao.class);
     }
 
     /**
@@ -46,12 +51,33 @@ public class IdleThreadBasedTaskAllocator extends ExecutorRouter {
     private void asyncUpdateTaskExecutorMapping(int jobId, String executorAddress) {
         taskExecutor.execute(() -> {
             try {
+                List<Map<String, Object>> maps = xxlJobGroupDao.selectByAddressList(executorAddress);
+                // 执行器组id
+                Long groupId = null;
+                // 执行器appname
+                String appName = null;
+                // 执行器名称
+                String title = null;
+                
+                if (Objects.nonNull(maps)) {
+                    Map<String, Object> group = maps.get(0);
+                    groupId = (Long) group.get("id");
+                    appName = (String) group.get("app_name");
+                    title = (String) group.get("title");
+                }
+                
                 XxlJobTaskExecutorMapping mapping = new XxlJobTaskExecutorMapping();
                 mapping.setJobId(jobId);
                 mapping.setExecutorAddress(executorAddress);
                 mapping.setUpdateTime(new Date(System.currentTimeMillis()));
+                // 设置新增字段
+                mapping.setGroupId(groupId);
+                mapping.setAppName(appName);
+                mapping.setTitle(title);
+                
                 xxlJobTaskExecutorMappingMapper.saveOrUpdate(mapping);
-                logger.info("更新任务执行器映射 [任务ID:{}] [执行器:{}]", jobId, executorAddress);
+                logger.info("更新任务执行器映射 [任务ID:{}] [执行器:{}] [执行器组ID:{}] [AppName:{}] [名称:{}]", 
+                    jobId, executorAddress, groupId, appName, title);
             } catch (Exception e) {
                 logger.error("更新任务执行器映射失败 [任务ID:{}] [执行器:{}] [异常:{}]", jobId, executorAddress, e.getMessage());
             }

@@ -8,10 +8,13 @@
         <result column="job_id" property="jobId"/>
         <result column="executor_address" property="executorAddress"/>
         <result column="update_time" property="updateTime"/>
+        <result column="group_id" property="groupId"/>
+        <result column="app_name" property="appName"/>
+        <result column="title" property="title"/>
     </resultMap>
 
     <sql id="Base_Column_List">
-        id, job_id, executor_address, update_time
+        id, job_id, executor_address, update_time, group_id, app_name, title
     </sql>
 
     <select id="loadExecutorAddress" resultType="String">
@@ -21,10 +24,14 @@
     </select>
 
     <insert id="saveOrUpdate">
-        INSERT INTO xxl_job_task_executor_mapping (job_id, executor_address, update_time)
-        VALUES (#{jobId}, #{executorAddress}, NOW()) ON DUPLICATE KEY
+        INSERT INTO xxl_job_task_executor_mapping (job_id, executor_address, update_time, group_id, app_name, title)
+        VALUES (#{jobId}, #{executorAddress}, NOW(), #{groupId}, #{appName}, #{title}) ON DUPLICATE KEY
         UPDATE
-            executor_address = #{executorAddress}, update_time = NOW();
+            executor_address = #{executorAddress}, 
+            update_time = NOW(),
+            group_id = #{groupId},
+            app_name = #{appName},
+            title = #{title};
     </insert>
 
     <delete id="deleteByJobId">
