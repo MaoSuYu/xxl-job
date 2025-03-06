@@ -17,34 +17,46 @@ public class IdleThreadBasedTaskAllocator extends ExecutorRouter {
     @Override
     public ReturnT<String> route(TriggerParam triggerParam, List<String> addressList) {
         StringBuffer idleBeatResultSB = new StringBuffer();
+        int jobId = triggerParam.getJobId();
+        logger.info("任务分配开始 [任务ID:{}] [执行器列表:{}]", jobId, addressList);
+        
         for (String address : addressList) {
-            ReturnT<ExecutorStatus> executorStatusResult = null;
-            int remainingThreadCount = 0;
+            ReturnT<ExecutorStatus> executorStatusResult;
             try {
-                ExecutorBiz executorBiz = XxlJobScheduler.getExecutorBiz(address);
-                executorStatusResult = executorBiz.status();
-                ExecutorStatus executorStatusContent = executorStatusResult.getContent();
-                System.err.println(executorStatusContent);
-                // 拿到客户端的线程信息
-                remainingThreadCount = executorStatusContent.getThreadCount() - executorStatusContent.getRunningTaskCount();
+                executorStatusResult = XxlJobScheduler.getExecutorBiz(address).status();
             } catch (Exception e) {
-                logger.error(e.getMessage(), e);
+                logger.error("获取执行器状态失败 [任务ID:{}] [地址:{}] [异常:{}]", jobId, address, e.getMessage());
                 return new ReturnT<String>(ReturnT.FAIL_CODE, "" + e);
             }
-            idleBeatResultSB.append( (idleBeatResultSB.length()>0)?"<br><br>":"")
+            
+            ExecutorStatus content = executorStatusResult.getContent();
+            int threadCount = content.getThreadCount();
+            int pendingTaskCount = content.getPendingTaskCount();
+            int runningTaskCount = content.getRunningTaskCount();
+            int remainingThreadCount = threadCount - (pendingTaskCount + runningTaskCount);
+            
+            logger.info("执行器状态 [任务ID:{}] [地址:{}] [总线程:{}] [运行:{}] [等待:{}] [可用:{}]", 
+                jobId, address, threadCount, runningTaskCount, pendingTaskCount, remainingThreadCount);
+
+            idleBeatResultSB.append((idleBeatResultSB.length()>0)?"<br><br>":"")
                     .append(I18nUtil.getString("jobconf_idleBeat") + "：")
                     .append("<br>address：").append(address)
                     .append("<br>code：").append(executorStatusResult.getCode())
-                    .append("<br>msg：").append(executorStatusResult.getMsg());
-            // 如果还存在可调度的线程
+                    .append("<br>msg：").append(executorStatusResult.getMsg())
+                    .append("<br>threadCount：").append(threadCount)
+                    .append("<br>runningTaskCount：").append(runningTaskCount)
+                    .append("<br>pendingTaskCount：").append(pendingTaskCount)
+                    .append("<br>remainingThreadCount：").append(remainingThreadCount);
+
             if (remainingThreadCount > 0) {
-                logger.info("当前可调度的节点：{}，节点支持的最大线程数：{}，节点正在运行的线程数：{}，节点可用线程数：{}", address, executorStatusResult.getContent().getThreadCount(), executorStatusResult.getContent().getRunningTaskCount(), remainingThreadCount);
-                return new ReturnT<String>(ReturnT.SUCCESS_CODE, idleBeatResultSB.toString(), address);
+                logger.info("选择执行器 [任务ID:{}] [地址:{}] [可用线程:{}]", jobId, address, remainingThreadCount);
+                return new ReturnT<String>(address);
             } else {
-                System.err.println("serr");
+                logger.info("执行器繁忙转移 [任务ID:{}] [地址:{}] [原因:无可用线程]", jobId, address);
             }
         }
 
+        logger.warn("任务分配失败 [任务ID:{}] [原因:无可用线程]", jobId);
         return new ReturnT<String>(ReturnT.FAIL_CODE, idleBeatResultSB.toString());
     }
 
