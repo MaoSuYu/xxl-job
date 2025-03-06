@@ -270,7 +270,7 @@ public class ExecutorBizImpl implements ExecutorBiz {
         
         logger.info("获取到任务线程, 任务ID: {}, 线程名称: {}", jobId, jobThread.getName());
 
-        Thread thread = JobThreadContext.JOB_THREAD_CONTEXT_MAP.get(jobId);
+        Thread thread = JobThreadContext.getJobThreadContextMap().get(jobId);
         if (null != thread) {
             logger.info("中断任务上下文线程, 任务ID: {}, 线程名称: {}", jobId, thread.getName());
             thread.interrupt();
@@ -281,6 +281,7 @@ public class ExecutorBizImpl implements ExecutorBiz {
         jobThread.toStop("force kill by admin");
         jobThread.interrupt();
         XxlJobExecutor.removeJobThread(jobId, "用户强行中断！");
+        JobThreadContext.removeJobThread(jobId);
         logger.info("强制终止任务完成, 任务ID: {}", jobId);
         return ReturnT.SUCCESS;
     }

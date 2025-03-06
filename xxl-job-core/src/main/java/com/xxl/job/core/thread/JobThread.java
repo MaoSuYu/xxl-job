@@ -339,6 +339,9 @@ public class JobThread extends Thread{
 			logger.error(e.getMessage(), e);
 		}
 
+		// 从任务线程上下文中移除当前线程
+		JobThreadContext.removeJobThread(jobId);
+		
 		// 记录线程停止日志
 		logger.info("工作线程已停止, thread name:{}", Thread.currentThread());
 	}

@@ -2,6 +2,7 @@ package com.xxl.job.core.executor;
 
 import com.xxl.job.core.biz.AdminBiz;
 import com.xxl.job.core.biz.client.AdminBizClient;
+import com.xxl.job.core.context.JobThreadContext;
 import com.xxl.job.core.handler.IJobHandler;
 import com.xxl.job.core.handler.annotation.XxlJob;
 import com.xxl.job.core.handler.impl.MethodJobHandler;
@@ -129,6 +130,10 @@ public class XxlJobExecutor  {
             jobThreadRepository.clear();
         }
         jobHandlerRepository.clear();
+        
+        // 清理线程上下文映射
+        JobThreadContext.getJobThreadContextMap().clear();
+        logger.info(">>>>>>>>>>> xxl-job, JobThreadContext cleared");
 
         // 停止日志清理线程
         JobLogFileCleanThread.getInstance().toStop();
@@ -327,6 +332,9 @@ public class XxlJobExecutor  {
             logger.warn("准备打断旧的任务...");
             oldJobThread.toStop(removeOldReason);
             oldJobThread.interrupt();
+            
+            // 从任务线程上下文中移除旧线程
+            JobThreadContext.removeJobThread(jobId);
         }
 
         return newJobThread;
@@ -345,6 +353,9 @@ public class XxlJobExecutor  {
         if (oldJobThread != null) {
             oldJobThread.toStop(removeOldReason);
             oldJobThread.interrupt();
+            
+            // 从任务线程上下文中移除
+            JobThreadContext.removeJobThread(jobId);
 
             return oldJobThread;
         }

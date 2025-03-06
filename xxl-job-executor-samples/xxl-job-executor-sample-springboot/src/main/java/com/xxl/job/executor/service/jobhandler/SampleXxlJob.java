@@ -41,11 +41,10 @@ public class SampleXxlJob {
     public void demoJobHandler() throws Exception {
 //        JobThreadContext.setJobThreadContextMap(XxlJobHelper.getJobId(), Thread.currentThread());
         System.err.println("框架执行");
-        while (true) {
-            Thread.sleep(3000);
-            System.err.println("正在执行...");
-        }
-//        TimeUnit.SECONDS.sleep(5);
+//        while (true) {
+//            System.err.println("正在执行...");
+//        }
+        TimeUnit.SECONDS.sleep(15);
 //        throw new RuntimeException();
     }
 
