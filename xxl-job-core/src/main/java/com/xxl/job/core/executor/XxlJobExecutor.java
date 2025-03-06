@@ -9,6 +9,7 @@ import com.xxl.job.core.log.XxlJobFileAppender;
 import com.xxl.job.core.server.EmbedServer;
 import com.xxl.job.core.thread.JobLogFileCleanThread;
 import com.xxl.job.core.thread.JobThread;
+import com.xxl.job.core.thread.JobThreadMonitorHelper;
 import com.xxl.job.core.thread.TriggerCallbackThread;
 import com.xxl.job.core.util.IpUtil;
 import com.xxl.job.core.util.NetUtil;
@@ -95,6 +96,9 @@ public class XxlJobExecutor  {
 
         // 初始化回调线程
         TriggerCallbackThread.getInstance().start();
+        
+        // 初始化任务线程监控
+        JobThreadMonitorHelper.getInstance().start();
 
         // 初始化嵌入式服务器
         initEmbedServer(address, ip, port, appname, accessToken);
@@ -131,6 +135,9 @@ public class XxlJobExecutor  {
 
         // 停止回调线程
         TriggerCallbackThread.getInstance().toStop();
+        
+        // 停止任务线程监控
+        JobThreadMonitorHelper.getInstance().toStop();
     }
 
 
