@@ -40,36 +40,40 @@ public class JobThreadMonitorHelper {
                         // 记录当前运行的任务数量
                         int runningJobCount = jobThreadMap.size();
                         if (runningJobCount > 0) {
-                            logger.info(">>>>>>>>>>> xxl-job, 当前正在运行的任务数量: {}", runningJobCount);
+                            StringBuilder sb = new StringBuilder();
+                            sb.append("运行中任务[").append(runningJobCount).append("]: ");
                             
-                            // 遍历并记录每个任务的信息
+                            // 遍历并记录每个任务的信息，使用简洁格式
                             for (Map.Entry<String, Thread> entry : jobThreadMap.entrySet()) {
                                 String jobId = entry.getKey();
                                 Thread jobThread = entry.getValue();
                                 
-                                logger.info(">>>>>>>>>>> xxl-job, 任务ID: {}, 线程名称: {}, 线程状态: {}", 
-                                    jobId, jobThread.getName(), jobThread.getState());
+                                // 添加任务信息: jobId(线程状态)
+                                sb.append(jobId).append("(").append(jobThread.getState().name()).append(") ");
                             }
+                            
+                            // 输出一条简洁的日志
+                            logger.info("{}", sb.toString());
                         }
                         
                         // 使用常量定义的扫描间隔
                         TimeUnit.SECONDS.sleep(ThreadConstant.MONITOR_SCAN_INTERVAL);
                     } catch (Throwable e) {
                         if (!toStop) {
-                            logger.error(">>>>>>>>>>> xxl-job, 任务线程监控异常: {}", e.getMessage());
+                            logger.error("任务监控异常: {}", e.getMessage());
                         }
                     }
                 }
                 
-                logger.info(">>>>>>>>>>> xxl-job, 任务线程监控线程已停止");
+                logger.info("任务线程监控已停止");
             }
         });
         
         monitorThread.setDaemon(true);
-        monitorThread.setName("xxl-job, JobThreadMonitorHelper");
+        monitorThread.setName("xxl-job-monitor");
         monitorThread.start();
         
-        logger.info(">>>>>>>>>>> xxl-job, 任务线程监控线程已启动");
+        logger.info("任务线程监控已启动");
     }
 
     /**
