@@ -236,6 +236,9 @@ public class EmbedServer {
                         return executorBiz.log(logParam);
                     case "/status":
                         return executorBiz.status();
+                    case "/forceKill":
+                        int jobId = GsonTool.fromJson(requestData, Integer.class);
+                        return executorBiz.forceKill(jobId);
                     default:
                         return new ReturnT<String>(ReturnT.FAIL_CODE, "invalid request, uri-mapping(" + uri + ") not found.");
                 }

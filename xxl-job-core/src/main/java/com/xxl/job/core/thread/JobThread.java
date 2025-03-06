@@ -3,6 +3,7 @@ package com.xxl.job.core.thread;
 import com.xxl.job.core.biz.model.HandleCallbackParam;
 import com.xxl.job.core.biz.model.ReturnT;
 import com.xxl.job.core.biz.model.TriggerParam;
+import com.xxl.job.core.context.JobThreadContext;
 import com.xxl.job.core.context.XxlJobContext;
 import com.xxl.job.core.context.XxlJobHelper;
 import com.xxl.job.core.enums.ThreadConstant;
@@ -68,6 +69,7 @@ public class JobThread extends Thread{
 
 		// 设置线程名称，便于调试和监控
 		this.setName("xxl-job, JobThread-"+jobId+"-"+System.currentTimeMillis());
+		JobThreadContext.setJobThreadContextMap(jobId, this);
 	}
 	
 	/**
@@ -124,6 +126,27 @@ public class JobThread extends Thread{
      */
     public boolean isRunningOrHasQueue() {
         return running || triggerQueue.size()>0;
+    }
+
+    /**
+     * 从等待队列中移除指定任务
+     * 
+     * @param jobId 任务ID
+     * @return 是否成功移除
+     */
+    public boolean removeFromQueue(int jobId) {
+        boolean removed = false;
+        // 遍历队列，移除匹配的任务
+        for (TriggerParam param : triggerQueue) {
+            if (param.getJobId() == jobId) {
+                removed = triggerQueue.remove(param);
+                if (removed) {
+                    logger.info("任务从等待队列移除成功 [任务ID:{}]", jobId);
+                }
+                break;
+            }
+        }
+        return removed;
     }
 
     /**

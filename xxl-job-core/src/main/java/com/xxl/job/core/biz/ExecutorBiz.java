@@ -49,4 +49,14 @@ public interface ExecutorBiz {
      */
     public ReturnT<ExecutorStatus> status();
 
+    /**
+     * 强制打断任务
+     * 如果任务在等待队列中，则从队列移除
+     * 如果任务正在执行，则强制打断
+     *
+     * @param jobId 任务ID
+     * @return 打断结果
+     */
+    public ReturnT<String> forceKill(int jobId);
+
 }

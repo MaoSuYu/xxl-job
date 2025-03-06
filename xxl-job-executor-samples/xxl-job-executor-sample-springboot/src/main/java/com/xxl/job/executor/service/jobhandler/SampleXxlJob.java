@@ -1,5 +1,6 @@
 package com.xxl.job.executor.service.jobhandler;
 
+import com.xxl.job.core.context.JobThreadContext;
 import com.xxl.job.core.context.XxlJobHelper;
 import com.xxl.job.core.handler.annotation.XxlJob;
 import com.xxl.job.core.util.GsonTool;
@@ -38,8 +39,12 @@ public class SampleXxlJob {
      */
     @XxlJob("demoJobHandler")
     public void demoJobHandler() throws Exception {
+//        JobThreadContext.setJobThreadContextMap(XxlJobHelper.getJobId(), Thread.currentThread());
         System.err.println("框架执行");
-        TimeUnit.DAYS.sleep(1);
+        while (true) {
+            Thread.sleep(3000);
+            System.err.println("正在执行...");
+        }
 //        TimeUnit.SECONDS.sleep(5);
 //        throw new RuntimeException();
     }

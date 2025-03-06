@@ -136,18 +136,18 @@ CREATE TABLE `xxl_job_lock`
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
 
--- ----------------------------
--- Table structure for xxl_job_task_executor_mapping
--- ----------------------------
-CREATE TABLE `xxl_job_task_executor_mapping` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'ID',
-  `job_id` int(11) NOT NULL COMMENT '任务ID',
-  `executor_address` varchar(255) NOT NULL COMMENT '执行器地址',
-  `update_time` datetime NOT NULL COMMENT '更新时间',
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uidx_job_id` (`job_id`),
-  INDEX `idx_update_time` (`update_time`)
+
+CREATE TABLE `xxl_job_task_executor_mapping`
+(
+    `id`               bigint       NOT NULL AUTO_INCREMENT COMMENT 'ID',
+    `job_id`           int          NOT NULL COMMENT '任务ID',
+    `executor_address` varchar(255) NOT NULL COMMENT '执行器地址',
+    `update_time`      datetime     NOT NULL COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uidx_job_id` (`job_id`),
+    KEY                `idx_update_time` (`update_time`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='任务执行器节点映射表';
+
 
 INSERT INTO `xxl_job_group`(`id`, `app_name`, `title`, `address_type`, `address_list`, `update_time`)
 VALUES (1, 'xxl-job-executor-sample', '示例执行器', 0, NULL, '2018-11-03 22:21:31');

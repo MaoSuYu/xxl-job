@@ -1,17 +1,23 @@
 package com.xxl.job.admin.controller;
 
+import com.xxl.job.admin.controller.annotation.PermissionLimit;
 import com.xxl.job.admin.controller.interceptor.PermissionInterceptor;
 import com.xxl.job.admin.core.exception.XxlJobException;
 import com.xxl.job.admin.core.model.XxlJobGroup;
 import com.xxl.job.admin.core.model.XxlJobInfo;
+import com.xxl.job.admin.core.model.XxlJobTaskExecutorMapping;
 import com.xxl.job.admin.core.model.XxlJobUser;
 import com.xxl.job.admin.core.route.ExecutorRouteStrategyEnum;
 import com.xxl.job.admin.core.scheduler.MisfireStrategyEnum;
 import com.xxl.job.admin.core.scheduler.ScheduleTypeEnum;
+import com.xxl.job.admin.core.scheduler.XxlJobScheduler;
 import com.xxl.job.admin.core.thread.JobScheduleHelper;
 import com.xxl.job.admin.core.util.I18nUtil;
 import com.xxl.job.admin.dao.XxlJobGroupDao;
+import com.xxl.job.admin.dao.XxlJobTaskExecutorMappingMapper;
 import com.xxl.job.admin.service.XxlJobService;
+import com.xxl.job.core.biz.ExecutorBiz;
+import com.xxl.job.core.biz.model.KillParam;
 import com.xxl.job.core.biz.model.ReturnT;
 import com.xxl.job.core.enums.ExecutorBlockStrategyEnum;
 import com.xxl.job.core.glue.GlueTypeEnum;
@@ -41,6 +47,8 @@ public class JobInfoController {
 	private XxlJobGroupDao xxlJobGroupDao;
 	@Resource
 	private XxlJobService xxlJobService;
+	@Resource
+	private XxlJobTaskExecutorMappingMapper xxlJobTaskExecutorMappingMapper;
 	
 	@RequestMapping
 	public String index(HttpServletRequest request, Model model, @RequestParam(value = "jobGroup", required = false, defaultValue = "-1") int jobGroup) {
@@ -168,6 +176,33 @@ public class JobInfoController {
 		}
 		return new ReturnT<List<String>>(result);
 
+	}
+	
+	@RequestMapping("/forceKill")
+	@ResponseBody
+	public ReturnT<String> forceKill(@RequestParam("id") int id) {
+		// 1. 先停止调度
+		ReturnT<String> stopResult = xxlJobService.stop(id);
+		if (stopResult.getCode() != ReturnT.SUCCESS_CODE) {
+			return stopResult;
+		}
+
+		// 2. 从映射表中获取执行节点
+		String executorAddress = xxlJobTaskExecutorMappingMapper.loadExecutorAddress(id);
+		if (executorAddress == null) {
+			return new ReturnT<>(ReturnT.FAIL_CODE, "未找到任务执行节点");
+		}
+
+		// 3. 调用执行器的强制打断接口
+		try {
+			ExecutorBiz executorBiz = XxlJobScheduler.getExecutorBiz(executorAddress);
+//			executorBiz.kill(new KillParam(id));
+//			return null;
+			return executorBiz.forceKill(id);
+		} catch (Exception e) {
+			logger.error("强制打断任务失败 [任务ID:{}] [执行器:{}] [异常:{}]", id, executorAddress, e.getMessage());
+			return new ReturnT<>(ReturnT.FAIL_CODE, "强制打断任务失败：" + e.getMessage());
+		}
 	}
 	
 }

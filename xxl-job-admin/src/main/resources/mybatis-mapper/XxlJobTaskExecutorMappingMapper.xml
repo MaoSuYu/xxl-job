@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xxl.job.admin.dao.XxlJobTaskExecutorMappingMapper">
+    
+    <resultMap id="XxlJobTaskExecutorMapping" type="com.xxl.job.admin.core.model.XxlJobTaskExecutorMapping">
+        <result column="id" property="id"/>
+        <result column="job_id" property="jobId"/>
+        <result column="executor_address" property="executorAddress"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, job_id, executor_address, update_time
+    </sql>
+
+    <select id="loadExecutorAddress" resultType="String">
+        SELECT executor_address
+        FROM xxl_job_task_executor_mapping
+        WHERE job_id = #{jobId}
+    </select>
+
+    <insert id="saveOrUpdate">
+        INSERT INTO xxl_job_task_executor_mapping (job_id, executor_address, update_time)
+        VALUES (#{jobId}, #{executorAddress}, NOW()) ON DUPLICATE KEY
+        UPDATE
+            executor_address = #{executorAddress}, update_time = NOW();
+    </insert>
+
+    <delete id="deleteByJobId">
+        DELETE FROM xxl_job_task_executor_mapping
+        WHERE job_id = #{jobId}
+    </delete>
+
+</mapper> 
