@@ -5,6 +5,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -61,5 +62,20 @@ public interface XxlJobInfoDao {
 	 */
 	public int scheduleUpdate(XxlJobInfo xxlJobInfo);
 
+	/**
+	 * 根据jobId查询执行器组的title
+	 *
+	 * @param jobId 任务ID
+	 * @return 执行器组的title
+	 */
+	public String getGroupTitleByJobId(@Param("jobId") int jobId);
+	
+	/**
+	 * 批量查询jobId对应的执行器组title
+	 *
+	 * @param jobIds 任务ID集合
+	 * @return Map<jobId, title>
+	 */
+	public List<Map<String, Object>> batchGetGroupTitleByJobIds(@Param("jobIds") List<Long> jobIds);
 
 }

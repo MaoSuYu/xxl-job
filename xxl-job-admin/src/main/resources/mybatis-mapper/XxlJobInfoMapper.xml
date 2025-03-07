@@ -240,4 +240,25 @@
 		  AND trigger_status = 1
 	</update>
 
+	<!-- 根据jobId查询执行器组的title -->
+	<select id="getGroupTitleByJobId" parameterType="java.lang.Integer" resultType="java.lang.String">
+		SELECT g.title
+		FROM xxl_job_info i
+		JOIN xxl_job_group g ON i.job_group = g.id
+		WHERE i.id = #{jobId}
+	</select>
+	
+	<!-- 批量查询jobId对应的执行器组title -->
+	<select id="batchGetGroupTitleByJobIds" parameterType="java.util.List" resultType="java.util.Map">
+		SELECT 
+			i.id AS jobId,
+			g.title AS title
+		FROM xxl_job_info i
+		JOIN xxl_job_group g ON i.job_group = g.id
+		WHERE i.id IN
+		<foreach collection="jobIds" item="jobId" open="(" separator="," close=")">
+			#{jobId}
+		</foreach>
+	</select>
+
 </mapper>

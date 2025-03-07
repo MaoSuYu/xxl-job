@@ -77,7 +77,7 @@ public class JobThreadMonitorHelper {
                                 
                                 // 收集线程信息用于上报，添加执行器信息
                                 ThreadInfo threadInfo = new ThreadInfo(
-                                    jobId, 
+                                    Long.valueOf(jobId),
                                     threadState,
                                     appName,
                                     ip,

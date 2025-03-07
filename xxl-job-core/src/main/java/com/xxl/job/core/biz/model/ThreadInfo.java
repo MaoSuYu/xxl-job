@@ -3,7 +3,7 @@ package com.xxl.job.core.biz.model;
 import java.util.List;
 
 public class ThreadInfo {
-    private String jobId;
+    private Long jobId;
     private String threadState;
     
     // 执行器基本信息
@@ -11,6 +11,7 @@ public class ThreadInfo {
     private String ip;             // 执行器IP
     private int port;              // 执行器端口
     private String title;          // 执行器标题
+    private String executorTitle;  // 执行器组标题
     private long startTime;        // 线程启动时间
     private long runningTime;      // 线程运行时长(毫秒)
 
@@ -19,13 +20,13 @@ public class ThreadInfo {
     }
 
     // 基本构造函数
-    public ThreadInfo(String jobId, String threadState) {
+    public ThreadInfo(Long jobId, String threadState) {
         this.jobId = jobId;
         this.threadState = threadState;
     }
     
     // 完整构造函数
-    public ThreadInfo(String jobId, String threadState, String appName, String ip, int port, String title, long startTime) {
+    public ThreadInfo(Long jobId, String threadState, String appName, String ip, int port, String title, long startTime) {
         this.jobId = jobId;
         this.threadState = threadState;
         this.appName = appName;
@@ -36,11 +37,11 @@ public class ThreadInfo {
         this.runningTime = System.currentTimeMillis() - startTime;
     }
 
-    public String getJobId() {
+    public Long getJobId() {
         return jobId;
     }
 
-    public void setJobId(String jobId) {
+    public void setJobId(Long jobId) {
         this.jobId = jobId;
     }
 
@@ -84,6 +85,14 @@ public class ThreadInfo {
         this.title = title;
     }
     
+    public String getExecutorTitle() {
+        return executorTitle;
+    }
+
+    public void setExecutorTitle(String executorTitle) {
+        this.executorTitle = executorTitle;
+    }
+    
     public long getStartTime() {
         return startTime;
     }
@@ -109,6 +118,7 @@ public class ThreadInfo {
                 ", ip='" + ip + '\'' +
                 ", port=" + port +
                 ", title='" + title + '\'' +
+                ", executorTitle='" + executorTitle + '\'' +
                 ", startTime=" + startTime +
                 ", runningTime=" + runningTime +
                 '}';
