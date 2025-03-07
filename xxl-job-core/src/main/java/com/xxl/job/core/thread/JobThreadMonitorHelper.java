@@ -75,30 +75,6 @@ public class JobThreadMonitorHelper {
                                 int port = XxlJobExecutor.getStaticPort();
                                 String title = "执行器";
                                 
-                                logger.debug("获取到执行器信息: appName={}, ip={}, port={}", appName, ip, port);
-                                
-                                // 尝试从AdminBizList获取更多信息
-                                try {
-                                    List<AdminBiz> adminBizList = XxlJobExecutor.getAdminBizList();
-                                    if (adminBizList != null && !adminBizList.isEmpty()) {
-                                        for (AdminBiz biz : adminBizList) {
-                                            if (biz instanceof AdminBizClient) {
-                                                AdminBizClient client = (AdminBizClient) biz;
-                                                // 从客户端获取地址信息
-                                                Method getAddressUrlMethod = AdminBizClient.class.getDeclaredMethod("getAddressUrl");
-                                                getAddressUrlMethod.setAccessible(true);
-                                                String addressUrl = (String) getAddressUrlMethod.invoke(client);
-                                                
-                                                if (addressUrl != null && !addressUrl.isEmpty()) {
-                                                    logger.info("从AdminBizClient获取到地址: {}", addressUrl);
-                                                }
-                                            }
-                                        }
-                                    }
-                                } catch (Exception ex) {
-                                    logger.warn("获取AdminBizList信息失败: {}", ex.getMessage());
-                                }
-                                
                                 // 收集线程信息用于上报，添加执行器信息
                                 ThreadInfo threadInfo = new ThreadInfo(
                                     jobId, 
