@@ -69,11 +69,11 @@ public class AdminBizImpl implements AdminBiz {
                 stringRedisTemplate.opsForValue().set(
                         redisKey.toString(),
                         JSON.toJSONString(threadInfo),
-                        1,
-                        TimeUnit.MINUTES
+                        10,
+                        TimeUnit.SECONDS
                 );
 
-                logger.debug("线程信息已存入Redis，key={}, value={}, 过期时间=3秒",
+                logger.debug("线程信息已存入Redis，key={}, value={}, 过期时间=10秒",
                         redisKey.toString(), threadInfo.getThreadState());
             }
         }
