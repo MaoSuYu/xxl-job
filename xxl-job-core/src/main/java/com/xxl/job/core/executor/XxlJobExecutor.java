@@ -30,6 +30,9 @@ import java.util.concurrent.ConcurrentMap;
 public class XxlJobExecutor  {
     private static final Logger logger = LoggerFactory.getLogger(XxlJobExecutor.class);
 
+    // 静态实例，用于存储当前执行器的信息
+    private static volatile XxlJobExecutor instance;
+
     // ---------------------- param ----------------------
     // 管理员地址列表，用于与调度中心通信
     private String adminAddresses;
@@ -39,6 +42,8 @@ public class XxlJobExecutor  {
     private int timeout;
     // 应用名称
     private String appname;
+
+
     // 服务器地址
     private String address;
     // 服务器IP
@@ -49,6 +54,27 @@ public class XxlJobExecutor  {
     private String logPath;
     // 日志保留天数
     private int logRetentionDays;
+
+    // 静态方法，用于获取执行器信息
+    public static String getStaticAppname() {
+        return instance != null ? instance.appname : "未知执行器";
+    }
+
+    public static String getStaticAddress() {
+        return instance != null ? instance.address : "";
+    }
+
+    public static String getStaticIp() {
+        return IpUtil.getIp();
+    }
+
+    public static int getStaticPort() {
+        return instance != null ? instance.port : 0;
+    }
+
+    public static String getStaticAccessToken() {
+        return instance != null ? instance.accessToken : "";
+    }
 
     public void setAdminAddresses(String adminAddresses) {
         this.adminAddresses = adminAddresses;
@@ -86,6 +112,9 @@ public class XxlJobExecutor  {
      * 该方法初始化日志路径、管理员客户端、日志清理线程、回调线程和嵌入式服务器。
      */
     public void start() throws Exception {
+        // 设置静态实例
+        instance = this;
+        
         // 初始化日志路径
         XxlJobFileAppender.initLogPath(logPath);
 

@@ -4,7 +4,10 @@ import com.xxl.job.core.biz.AdminBiz;
 import com.xxl.job.core.biz.model.HandleCallbackParam;
 import com.xxl.job.core.biz.model.RegistryParam;
 import com.xxl.job.core.biz.model.ReturnT;
+import com.xxl.job.core.biz.model.ThreadInfo;
 import com.xxl.job.core.util.XxlJobRemotingUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -14,6 +17,8 @@ import java.util.List;
  * @author xuxueli 2017-07-28 22:14:52
  */
 public class AdminBizClient implements AdminBiz {
+
+    private static final Logger logger = LoggerFactory.getLogger(AdminBizClient.class);
 
     public AdminBizClient() {
     }
@@ -49,6 +54,11 @@ public class AdminBizClient implements AdminBiz {
     @Override
     public ReturnT<String> registryRemove(RegistryParam registryParam) {
         return XxlJobRemotingUtil.postBody(addressUrl + "api/registryRemove", accessToken, timeout, registryParam, String.class);
+    }
+
+    @Override
+    public ReturnT<String> reportRunningThreads(List<ThreadInfo> threadInfoList) {
+        return XxlJobRemotingUtil.postBody(addressUrl + "api/reportRunningThreads", accessToken, timeout, threadInfoList, String.class);
     }
 
 }

@@ -6,7 +6,7 @@ import com.xxl.job.admin.core.scheduler.XxlJobScheduler;
 import com.xxl.job.admin.core.util.I18nUtil;
 import com.xxl.job.admin.dao.XxlJobGroupDao;
 import com.xxl.job.admin.dao.XxlJobTaskExecutorMappingMapper;
-import com.xxl.job.core.util.SpringContextUtil;
+import com.xxl.job.admin.util.SpringContextUtil;
 import com.xxl.job.core.biz.model.ExecutorStatus;
 import com.xxl.job.core.biz.model.ReturnT;
 import com.xxl.job.core.biz.model.TriggerParam;

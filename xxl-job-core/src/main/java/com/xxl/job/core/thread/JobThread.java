@@ -51,6 +51,9 @@ public class JobThread extends Thread{
     private boolean running = false;    // if running job
     // 空闲次数计数，用于检测长时间空闲的线程
 	private int idleTimes = 0;			// idle times
+	
+	// 线程启动时间
+	private long startTime = System.currentTimeMillis();
 
     /**
      * 构造方法
@@ -79,6 +82,15 @@ public class JobThread extends Thread{
      */
 	public IJobHandler getHandler() {
 		return handler;
+	}
+
+	/**
+	 * 获取线程启动时间
+	 * 
+	 * @return 线程启动时间的时间戳
+	 */
+	public long getStartTime() {
+	    return startTime;
 	}
 
     /**
