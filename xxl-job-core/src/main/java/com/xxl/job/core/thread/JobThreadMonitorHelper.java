@@ -73,8 +73,7 @@ public class JobThreadMonitorHelper {
                                 String appName = XxlJobExecutor.getStaticAppname();
                                 String ip = XxlJobExecutor.getStaticIp();
                                 int port = XxlJobExecutor.getStaticPort();
-                                String title = "执行器";
-                                
+
                                 // 收集线程信息用于上报，添加执行器信息
                                 ThreadInfo threadInfo = new ThreadInfo(
                                     Long.valueOf(jobId),
@@ -82,7 +81,6 @@ public class JobThreadMonitorHelper {
                                     appName,
                                     ip,
                                     port,
-                                    title,
                                     startTime
                                 );
                                 threadInfoList.add(threadInfo);

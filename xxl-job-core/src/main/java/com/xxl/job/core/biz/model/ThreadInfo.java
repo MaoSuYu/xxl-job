@@ -26,13 +26,12 @@ public class ThreadInfo {
     }
     
     // 完整构造函数
-    public ThreadInfo(Long jobId, String threadState, String appName, String ip, int port, String title, long startTime) {
+    public ThreadInfo(Long jobId, String threadState, String appName, String ip, int port, long startTime) {
         this.jobId = jobId;
         this.threadState = threadState;
         this.appName = appName;
         this.ip = ip;
         this.port = port;
-        this.title = title;
         this.startTime = startTime;
         this.runningTime = System.currentTimeMillis() - startTime;
     }
