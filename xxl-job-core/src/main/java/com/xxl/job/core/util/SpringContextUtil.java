@@ -1,4 +1,4 @@
-package com.xxl.job.admin.util;
+package com.xxl.job.core.util;
 
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
