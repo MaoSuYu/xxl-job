@@ -49,7 +49,7 @@ public class JobInfoController {
 	private XxlJobService xxlJobService;
 	@Resource
 	private XxlJobTaskExecutorMappingMapper xxlJobTaskExecutorMappingMapper;
-	
+
 	@RequestMapping
 	public String index(HttpServletRequest request, Model model, @RequestParam(value = "jobGroup", required = false, defaultValue = "-1") int jobGroup) {
 
@@ -84,10 +84,10 @@ public class JobInfoController {
 										@RequestParam("jobDesc") String jobDesc,
 										@RequestParam("executorHandler") String executorHandler,
 										@RequestParam("author") String author) {
-		
+
 		return xxlJobService.pageList(start, length, jobGroup, triggerStatus, jobDesc, executorHandler, author);
 	}
-	
+
 	@RequestMapping("/add")
 	@ResponseBody
 	public ReturnT<String> add(HttpServletRequest request, XxlJobInfo jobInfo) {
@@ -98,7 +98,7 @@ public class JobInfoController {
 		XxlJobUser loginUser = PermissionInterceptor.getLoginUser(request);
 		return xxlJobService.add(jobInfo, loginUser);
 	}
-	
+
 	@RequestMapping("/update")
 	@ResponseBody
 	public ReturnT<String> update(HttpServletRequest request, XxlJobInfo jobInfo) {
@@ -109,25 +109,25 @@ public class JobInfoController {
 		XxlJobUser loginUser = PermissionInterceptor.getLoginUser(request);
 		return xxlJobService.update(jobInfo, loginUser);
 	}
-	
+
 	@RequestMapping("/remove")
 	@ResponseBody
-	public ReturnT<String> remove(@RequestParam("id") int id) {
+	public ReturnT<String> remove(@RequestParam("id") Long id) {
 		return xxlJobService.remove(id);
 	}
-	
+
 	@RequestMapping("/stop")
 	@ResponseBody
-	public ReturnT<String> pause(@RequestParam("id") int id) {
+	public ReturnT<String> pause(@RequestParam("id") Long id) {
 		return xxlJobService.stop(id);
 	}
-	
+
 	@RequestMapping("/start")
 	@ResponseBody
-	public ReturnT<String> start(@RequestParam("id") int id) {
+	public ReturnT<String> start(@RequestParam("id") Long id) {
 		return xxlJobService.start(id);
 	}
-	
+
 	/**
 	 * 手动触发任务的接口。
 	 *
@@ -140,7 +140,7 @@ public class JobInfoController {
 	@RequestMapping("/trigger")
 	@ResponseBody
 	public ReturnT<String> triggerJob(HttpServletRequest request,
-									  @RequestParam("id") int id,
+									  @RequestParam("id") Long id,
 									  @RequestParam("executorParam") String executorParam,
 									  @RequestParam("addressList") String addressList) {
 
@@ -177,10 +177,10 @@ public class JobInfoController {
 		return new ReturnT<List<String>>(result);
 
 	}
-	
+
 	@RequestMapping("/forceKill")
 	@ResponseBody
-	public ReturnT<String> forceKill(@RequestParam("id") int id) {
+	public ReturnT<String> forceKill(@RequestParam("id") Long id) {
 		// 1. 先停止调度
 		ReturnT<String> stopResult = xxlJobService.stop(id);
 		if (stopResult.getCode() != ReturnT.SUCCESS_CODE) {
@@ -204,5 +204,5 @@ public class JobInfoController {
 			return new ReturnT<>(ReturnT.FAIL_CODE, "强制打断任务失败：" + e.getMessage());
 		}
 	}
-	
+
 }

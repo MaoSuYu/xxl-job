@@ -258,16 +258,16 @@ public class ExecutorBizImpl implements ExecutorBiz {
     }
 
     @Override
-    public ReturnT<String> forceKill(int jobId) {
+    public ReturnT<String> forceKill(Long jobId) {
         logger.info("开始执行强制终止任务, 任务ID: {}", jobId);
-        
+
         // 获取任务线程
         JobThread jobThread = XxlJobExecutor.loadJobThread(jobId);
         if (jobThread == null) {
             logger.info("任务线程不存在，任务ID: {}, 可能已经停止", jobId);
             return new ReturnT<>(ReturnT.SUCCESS_CODE, "任务线程不存在，可能已经停止");
         }
-        
+
         logger.info("获取到任务线程, 任务ID: {}, 线程名称: {}", jobId, jobThread.getName());
 
         Thread thread = JobThreadContext.getJobThreadContextMap().get(jobId);
@@ -275,7 +275,7 @@ public class ExecutorBizImpl implements ExecutorBiz {
             logger.info("中断任务上下文线程, 任务ID: {}, 线程名称: {}", jobId, thread.getName());
             thread.interrupt();
         }
-        
+
         // 停止任务线程
         logger.info("开始停止任务线程, 任务ID: {}", jobId);
         jobThread.toStop("force kill by admin");

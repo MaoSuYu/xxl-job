@@ -89,6 +89,13 @@ public class XxlJobAdminConfig implements InitializingBean, DisposableBean {
     @Resource
     private JobAlarmer jobAlarmer;
 
+    @Resource
+    private XxlJobShardingInfoDao xxlJobShardingInfoDao;
+
+    public XxlJobShardingInfoDao getXxlJobShardingInfoDao() {
+        return xxlJobShardingInfoDao;
+    }
+
 
     public String getI18n() {
         if (!Arrays.asList("zh_CN", "zh_TC", "en").contains(i18n)) {

@@ -44,7 +44,7 @@ public interface ExecutorBiz {
 
     /**
      * 获取执行器状态
-     * 
+     *
      * @return 执行器状态信息，包括作业线程数、正在执行的任务数和等待执行的任务数
      */
     public ReturnT<ExecutorStatus> status();
@@ -57,6 +57,6 @@ public interface ExecutorBiz {
      * @param jobId 任务ID
      * @return 打断结果
      */
-    public ReturnT<String> forceKill(int jobId);
+    public ReturnT<String> forceKill(Long jobId);
 
 }

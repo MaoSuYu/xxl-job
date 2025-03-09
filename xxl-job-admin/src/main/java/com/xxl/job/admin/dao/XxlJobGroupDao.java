@@ -37,4 +37,5 @@ public interface XxlJobGroupDao {
 
     List<Map<String, Object>> selectByAddressList(@Param("url") String url);
 
+    XxlJobGroup loadByAppName(@Param("appName") String appName);
 }

@@ -30,7 +30,7 @@ public interface XxlJobLogDao {
 							 @Param("triggerTimeStart") Date triggerTimeStart,
 							 @Param("triggerTimeEnd") Date triggerTimeEnd,
 							 @Param("logStatus") int logStatus);
-	
+
 	public XxlJobLog load(@Param("id") long id);
 
 	public long save(XxlJobLog xxlJobLog);
@@ -38,8 +38,8 @@ public interface XxlJobLogDao {
 	public int updateTriggerInfo(XxlJobLog xxlJobLog);
 
 	public int updateHandleInfo(XxlJobLog xxlJobLog);
-	
-	public int delete(@Param("jobId") int jobId);
+
+	public int delete(@Param("jobId") Long jobId);
 
 	public Map<String, Object> findLogReport(@Param("from") Date from,
 											 @Param("to") Date to);

@@ -14,6 +14,12 @@ public enum ScheduleTypeEnum {
      */
     CRON(I18nUtil.getString("schedule_type_cron")),
 
+
+    /**
+     * schedule by fixed rate (in seconds)
+     */
+    PERIOD(I18nUtil.getString("schedule_type_period")),
+
     /**
      * schedule by fixed rate (in seconds)
      */

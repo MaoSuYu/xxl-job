@@ -10,18 +10,18 @@ public class IdleBeatParam implements Serializable {
 
     public IdleBeatParam() {
     }
-    public IdleBeatParam(int jobId) {
+    public IdleBeatParam(Long jobId) {
         this.jobId = jobId;
     }
 
-    private int jobId;
+    private Long jobId;
 
 
-    public int getJobId() {
+    public Long getJobId() {
         return jobId;
     }
 
-    public void setJobId(int jobId) {
+    public void setJobId(Long jobId) {
         this.jobId = jobId;
     }
 

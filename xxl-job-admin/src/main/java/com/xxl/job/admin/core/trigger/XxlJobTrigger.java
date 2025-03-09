@@ -8,6 +8,9 @@ import com.xxl.job.admin.core.model.XxlJobLog;
 import com.xxl.job.admin.core.route.ExecutorRouteStrategyEnum;
 import com.xxl.job.admin.core.scheduler.XxlJobScheduler;
 import com.xxl.job.admin.core.util.I18nUtil;
+import cn.hutool.core.util.StrUtil;
+import com.xxl.job.admin.core.model.XxlJobShardingInfo;
+import org.springframework.beans.BeanUtils;
 import com.xxl.job.core.biz.ExecutorBiz;
 import com.xxl.job.core.biz.model.ReturnT;
 import com.xxl.job.core.biz.model.TriggerParam;
@@ -17,9 +20,7 @@ import com.xxl.job.core.util.ThrowableUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -32,7 +33,7 @@ public class XxlJobTrigger {
     /**
      * trigger job
      *
-     * @param jobId
+     * @param jobInfo
      * @param triggerType
      * @param failRetryCount
      * 			>=0: use this param
@@ -45,19 +46,13 @@ public class XxlJobTrigger {
      *          null: use executor addressList
      *          not null: cover
      */
-    public static void trigger(int jobId,
+    public static void trigger(XxlJobInfo jobInfo,
                                TriggerTypeEnum triggerType,
                                int failRetryCount,
                                String executorShardingParam,
                                String executorParam,
                                String addressList) {
 
-        // load data
-        XxlJobInfo jobInfo = XxlJobAdminConfig.getAdminConfig().getXxlJobInfoDao().loadById(jobId);
-        if (jobInfo == null) {
-            logger.warn(">>>>>>>>>>>> trigger fail, jobId invalid，jobId={}", jobId);
-            return;
-        }
         if (executorParam != null) {
             jobInfo.setExecutorParam(executorParam);
         }
@@ -129,6 +124,26 @@ public class XxlJobTrigger {
         ExecutorRouteStrategyEnum executorRouteStrategyEnum = ExecutorRouteStrategyEnum.match(jobInfo.getExecutorRouteStrategy(), null);    // route strategy
         String shardingParam = (ExecutorRouteStrategyEnum.SHARDING_BROADCAST==executorRouteStrategyEnum)?String.valueOf(index).concat("/").concat(String.valueOf(total)):null;
 
+        String shardingJobIdStr = jobInfo.getShardingJobIds();
+        List<String> shardingJobIds = StrUtil.split(shardingJobIdStr, ',', true, true);
+        List<XxlJobShardingInfo> listByIds = XxlJobAdminConfig.getAdminConfig().getXxlJobShardingInfoDao().findListByIds(shardingJobIds);
+        List<XxlJobInfo> ShardingInfos = new ArrayList<>();
+        for (XxlJobShardingInfo shardingInfo : listByIds) {
+            XxlJobInfo xxlJobInfo = new XxlJobInfo();
+            BeanUtils.copyProperties(jobInfo,xxlJobInfo);
+
+            xxlJobInfo.setId(shardingInfo.getId());
+            xxlJobInfo.setExecutorParam(shardingInfo.getParams());
+            ShardingInfos.add(xxlJobInfo);
+        }
+
+        // 循环执行任务
+        for (XxlJobInfo shardingInfo : ShardingInfos) {
+            triggerJobInfo(group, shardingInfo, finalFailRetryCount, triggerType, index, total, blockStrategy, executorRouteStrategyEnum, shardingParam);
+        }
+    }
+
+    private static void triggerJobInfo(XxlJobGroup group, XxlJobInfo jobInfo, int finalFailRetryCount, TriggerTypeEnum triggerType, int index, int total, ExecutorBlockStrategyEnum blockStrategy, ExecutorRouteStrategyEnum executorRouteStrategyEnum, String shardingParam) {
         // 1、save log-id
         XxlJobLog jobLog = new XxlJobLog();
         jobLog.setJobGroup(jobInfo.getJobGroup());
@@ -189,7 +204,7 @@ public class XxlJobTrigger {
         triggerMsgSb.append("<br>").append(I18nUtil.getString("jobconf_trigger_exe_regaddress")).append("：").append(group.getRegistryList());
         triggerMsgSb.append("<br>").append(I18nUtil.getString("jobinfo_field_executorRouteStrategy")).append("：").append(executorRouteStrategyEnum.getTitle());
         if (shardingParam != null) {
-            triggerMsgSb.append("("+shardingParam+")");
+            triggerMsgSb.append("("+ shardingParam +")");
         }
         triggerMsgSb.append("<br>").append(I18nUtil.getString("jobinfo_field_executorBlockStrategy")).append("：").append(blockStrategy.getTitle());
         triggerMsgSb.append("<br>").append(I18nUtil.getString("jobinfo_field_timeout")).append("：").append(jobInfo.getExecutorTimeout());

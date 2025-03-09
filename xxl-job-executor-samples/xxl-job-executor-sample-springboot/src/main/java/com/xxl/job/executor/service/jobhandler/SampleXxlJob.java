@@ -39,6 +39,9 @@ public class SampleXxlJob {
      */
     @XxlJob("demoJobHandler")
     public void demoJobHandler() throws Exception {
+        String jobParam = XxlJobHelper.getJobParam();
+
+        System.out.println("jobParam = " + jobParam);
 //        JobThreadContext.setJobThreadContextMap(XxlJobHelper.getJobId(), Thread.currentThread());
 //        while (true) {
 //            System.err.println("正在执行...");

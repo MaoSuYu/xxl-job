@@ -63,7 +63,7 @@ public class ExecutorBizClient implements ExecutorBiz {
     }
 
     @Override
-    public ReturnT<String> forceKill(int jobId) {
+    public ReturnT<String> forceKill(Long jobId) {
         return XxlJobRemotingUtil.postBody(addressUrl + "forceKill", accessToken, timeout, jobId, String.class);
     }
 }

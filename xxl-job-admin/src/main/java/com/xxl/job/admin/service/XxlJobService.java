@@ -3,6 +3,7 @@ package com.xxl.job.admin.service;
 
 import com.xxl.job.admin.core.model.XxlJobInfo;
 import com.xxl.job.admin.core.model.XxlJobUser;
+import com.xxl.job.core.biz.model.HandleShardingParam;
 import com.xxl.job.core.biz.model.ReturnT;
 
 import java.util.Date;
@@ -10,7 +11,7 @@ import java.util.Map;
 
 /**
  * core job action for xxl-job
- * 
+ *
  * @author xuxueli 2016-5-28 15:30:33
  */
 public interface XxlJobService {
@@ -50,7 +51,7 @@ public interface XxlJobService {
 	 * @param id
 	 * @return
 	 */
-	public ReturnT<String> remove(int id);
+	public ReturnT<String> remove(Long id);
 
 	/**
 	 * start job
@@ -58,7 +59,7 @@ public interface XxlJobService {
 	 * @param id
 	 * @return
 	 */
-	public ReturnT<String> start(int id);
+	public ReturnT<String> start(Long id);
 
 	/**
 	 * stop job
@@ -66,7 +67,7 @@ public interface XxlJobService {
 	 * @param id
 	 * @return
 	 */
-	public ReturnT<String> stop(int id);
+	public ReturnT<String> stop(Long id);
 
 	/**
 	 * trigger
@@ -77,7 +78,9 @@ public interface XxlJobService {
 	 * @param addressList
 	 * @return
 	 */
-	public ReturnT<String> trigger(XxlJobUser loginUser, int jobId, String executorParam, String addressList);
+	public ReturnT<String> trigger(XxlJobUser loginUser, Long jobId, String executorParam, String addressList);
+
+	public ReturnT<String> ShardingTrigger(HandleShardingParam handleShardingParam);
 
 	/**
 	 * dashboard info

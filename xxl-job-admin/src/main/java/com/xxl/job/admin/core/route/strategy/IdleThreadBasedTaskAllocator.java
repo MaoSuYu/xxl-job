@@ -42,7 +42,7 @@ public class IdleThreadBasedTaskAllocator extends ExecutorRouter {
     /**
      * 异步更新任务执行器映射
      */
-    private void asyncUpdateTaskExecutorMapping(int jobId, String executorAddress) {
+    private void asyncUpdateTaskExecutorMapping(Long jobId, String executorAddress) {
         taskExecutor.execute(() -> {
             try {
                 List<Map<String, Object>> maps = xxlJobGroupDao.selectByAddressList(executorAddress);
@@ -52,14 +52,14 @@ public class IdleThreadBasedTaskAllocator extends ExecutorRouter {
                 String appName = null;
                 // 执行器名称
                 String title = null;
-                
+
                 if (Objects.nonNull(maps)) {
                     Map<String, Object> group = maps.get(0);
                     groupId = (Long) group.get("id");
                     appName = (String) group.get("app_name");
                     title = (String) group.get("title");
                 }
-                
+
                 XxlJobTaskExecutorMapping mapping = new XxlJobTaskExecutorMapping();
                 mapping.setJobId(jobId);
                 mapping.setExecutorAddress(executorAddress);
@@ -68,9 +68,9 @@ public class IdleThreadBasedTaskAllocator extends ExecutorRouter {
                 mapping.setGroupId(groupId);
                 mapping.setAppName(appName);
                 mapping.setTitle(title);
-                
+
                 xxlJobTaskExecutorMappingMapper.saveOrUpdate(mapping);
-                logger.info("更新任务执行器映射 [任务ID:{}] [执行器:{}] [执行器组ID:{}] [AppName:{}] [名称:{}]", 
+                logger.info("更新任务执行器映射 [任务ID:{}] [执行器:{}] [执行器组ID:{}] [AppName:{}] [名称:{}]",
                     jobId, executorAddress, groupId, appName, title);
             } catch (Exception e) {
                 logger.error("更新任务执行器映射失败 [任务ID:{}] [执行器:{}] [异常:{}]", jobId, executorAddress, e.getMessage());
@@ -81,9 +81,9 @@ public class IdleThreadBasedTaskAllocator extends ExecutorRouter {
     @Override
     public ReturnT<String> route(TriggerParam triggerParam, List<String> addressList) {
         StringBuffer idleBeatResultSB = new StringBuffer();
-        int jobId = triggerParam.getJobId();
+        Long jobId = triggerParam.getJobId();
         logger.info("任务分配开始 [任务ID:{}] [执行器列表:{}]", jobId, addressList);
-        
+
         for (String address : addressList) {
             ReturnT<ExecutorStatus> executorStatusResult;
             try {
@@ -92,14 +92,14 @@ public class IdleThreadBasedTaskAllocator extends ExecutorRouter {
                 logger.error("获取执行器状态失败 [任务ID:{}] [地址:{}] [异常:{}]", jobId, address, e.getMessage());
                 return new ReturnT<String>(ReturnT.FAIL_CODE, "" + e);
             }
-            
+
             ExecutorStatus content = executorStatusResult.getContent();
             int threadCount = content.getThreadCount();
             int pendingTaskCount = content.getPendingTaskCount();
             int runningTaskCount = content.getRunningTaskCount();
             int remainingThreadCount = threadCount - (pendingTaskCount + runningTaskCount);
-            
-            logger.info("执行器状态 [任务ID:{}] [地址:{}] [总线程:{}] [运行:{}] [等待:{}] [可用:{}]", 
+
+            logger.info("执行器状态 [任务ID:{}] [地址:{}] [总线程:{}] [运行:{}] [等待:{}] [可用:{}]",
                 jobId, address, threadCount, runningTaskCount, pendingTaskCount, remainingThreadCount);
 
             idleBeatResultSB.append((idleBeatResultSB.length()>0)?"<br><br>":"")

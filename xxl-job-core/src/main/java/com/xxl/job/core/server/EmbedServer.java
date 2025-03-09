@@ -24,26 +24,26 @@ import java.util.concurrent.*;
 
 /**
  * 嵌入式服务器类
- * 
+ *
  * 该类用于启动一个基于 Netty 的 HTTP 服务器，
  * 负责接收调度中心的请求并进行处理。
- * 
+ *
  * 工作原理：
  * 1. 使用 Netty 启动一个 HTTP 服务器，监听指定端口。
  * 2. 通过线程池处理接收到的请求，确保高并发处理能力。
  * 3. 支持心跳检测、任务执行、任务终止、日志查询等功能。
  * 4. 通过 ExecutorBizImpl 实现具体的业务逻辑。
- * 
+ *
  * 关键组件：
  * - ServerBootstrap：Netty 服务器启动器，用于配置和启动服务器。
  * - NioEventLoopGroup：Netty 的事件循环组，负责处理连接的接入和数据读写。
  * - ThreadPoolExecutor：线程池，用于处理业务逻辑，避免阻塞 Netty 的 I/O 线程。
  * - EmbedHttpServerHandler：Netty 的通道处理器，负责解析 HTTP 请求并调用业务逻辑。
- * 
+ *
  * 该类的设计确保了高效的网络通信和灵活的业务处理能力。
- * 
+ *
  * Copy from : https://github.com/xuxueli/xxl-rpc
- * 
+ *
  * 作者：xuxueli 2020-04-11 21:25
  */
 public class EmbedServer {
@@ -56,12 +56,12 @@ public class EmbedServer {
 
     /**
      * 启动嵌入式服务器
-     * 
+     *
      * @param address     服务器地址
      * @param port        服务器端口
      * @param appname     应用名称
      * @param accessToken 访问令牌
-     * 
+     *
      * 该方法初始化并启动一个 Netty HTTP 服务器，
      * 并通过线程池处理业务请求。
      */
@@ -143,7 +143,7 @@ public class EmbedServer {
 
     /**
      * 停止嵌入式服务器
-     * 
+     *
      * 该方法用于停止服务器线程并注销注册信息。
      */
     public void stop() throws Exception {
@@ -161,7 +161,7 @@ public class EmbedServer {
 
     /**
      * 嵌入式 HTTP 服务器处理器
-     * 
+     *
      * 该类负责处理 HTTP 请求，解析请求数据并调用相应的业务逻辑。
      * 支持的请求包括心跳检测、任务执行、任务终止、日志查询等。
      */
@@ -237,7 +237,7 @@ public class EmbedServer {
                     case "/status":
                         return executorBiz.status();
                     case "/forceKill":
-                        int jobId = GsonTool.fromJson(requestData, Integer.class);
+                        Long jobId = GsonTool.fromJson(requestData, Long.class);
                         return executorBiz.forceKill(jobId);
                     default:
                         return new ReturnT<String>(ReturnT.FAIL_CODE, "invalid request, uri-mapping(" + uri + ") not found.");
@@ -288,10 +288,10 @@ public class EmbedServer {
 
     /**
      * 启动注册线程
-     * 
+     *
      * @param appname 应用名称
      * @param address 服务器地址
-     * 
+     *
      * 该方法启动一个注册线程，
      * 用于将执行器注册到调度中心。
      */
@@ -302,7 +302,7 @@ public class EmbedServer {
 
     /**
      * 停止注册线程
-     * 
+     *
      * 该方法用于停止注册线程，
      * 取消执行器在调度中心的注册。
      */

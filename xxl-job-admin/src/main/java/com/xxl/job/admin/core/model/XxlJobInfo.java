@@ -8,15 +8,15 @@ import java.util.Date;
  * @author xuxueli  2016-1-12 18:25:49
  */
 public class XxlJobInfo {
-	
-	private int id;				// 主键ID
-	
+
+	private Long id;				// 主键ID
+
 	private int jobGroup;		// 执行器主键ID
 	private String jobDesc;
-	
+
 	private Date addTime;
 	private Date updateTime;
-	
+
 	private String author;		// 负责人
 	private String alarmEmail;	// 报警邮件
 
@@ -30,7 +30,7 @@ public class XxlJobInfo {
 	private String executorBlockStrategy;	// 阻塞处理策略
 	private int executorTimeout;     		// 任务执行超时时间，单位秒
 	private int executorFailRetryCount;		// 失败重试次数
-	
+
 	private String glueType;		// GLUE类型	#com.xxl.job.core.glue.GlueTypeEnum
 	private String glueSource;		// GLUE源代码
 	private String glueRemark;		// GLUE备注
@@ -42,12 +42,77 @@ public class XxlJobInfo {
 	private long triggerLastTime;	// 上次调度时间
 	private long triggerNextTime;	// 下次调度时间
 
+	/**
+	 * 调度的首次时间
+	 */
+	private String firstSchedulingTime;
 
-	public int getId() {
+	/**
+	 * 调度的截止时间
+	 */
+	private String schedulingDeadline;
+
+	/**
+	 * 分片任务id，id*
+	 */
+	private String shardingJobIds;
+
+	/**
+	 * 数据时间间隔数
+	 */
+	private int dataInterval;
+
+	/**
+	 *  数据时间间隔数单位
+	 */
+	private String timeUnit;
+
+	public int getDataInterval() {
+		return dataInterval;
+	}
+
+	public void setDataInterval(int dataInterval) {
+		this.dataInterval = dataInterval;
+	}
+
+	public String getTimeUnit() {
+		return timeUnit;
+	}
+
+	public void setTimeUnit(String timeUnit) {
+		this.timeUnit = timeUnit;
+	}
+
+	public String getFirstSchedulingTime() {
+		return firstSchedulingTime;
+	}
+
+	public void setFirstSchedulingTime(String firstSchedulingTime) {
+		this.firstSchedulingTime = firstSchedulingTime;
+	}
+
+	public String getSchedulingDeadline() {
+		return schedulingDeadline;
+	}
+
+	public void setSchedulingDeadline(String schedulingDeadline) {
+		this.schedulingDeadline = schedulingDeadline;
+	}
+
+	public String getShardingJobIds() {
+		return shardingJobIds;
+	}
+
+	public void setShardingJobIds(String shardingJobIds) {
+		this.shardingJobIds = shardingJobIds;
+	}
+
+
+	public Long getId() {
 		return id;
 	}
 
-	public void setId(int id) {
+	public void setId(Long id) {
 		this.id = id;
 	}
 

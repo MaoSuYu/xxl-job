@@ -108,13 +108,13 @@ public class XxlJobExecutor  {
     // ---------------------- start + stop ----------------------
     /**
      * 启动执行器
-     * 
+     *
      * 该方法初始化日志路径、管理员客户端、日志清理线程、回调线程和嵌入式服务器。
      */
     public void start() throws Exception {
         // 设置静态实例
         instance = this;
-        
+
         // 初始化日志路径
         XxlJobFileAppender.initLogPath(logPath);
 
@@ -126,7 +126,7 @@ public class XxlJobExecutor  {
 
         // 初始化回调线程
         TriggerCallbackThread.getInstance().start();
-        
+
         // 初始化任务线程监控
         JobThreadMonitorHelper.getInstance().start();
 
@@ -136,7 +136,7 @@ public class XxlJobExecutor  {
 
     /**
      * 销毁执行器
-     * 
+     *
      * 该方法停止嵌入式服务器、清理作业线程和处理器，并停止日志清理和回调线程。
      */
     public void destroy(){
@@ -145,7 +145,7 @@ public class XxlJobExecutor  {
 
         // 清理作业线程
         if (jobThreadRepository.size() > 0) {
-            for (Map.Entry<Integer, JobThread> item: jobThreadRepository.entrySet()) {
+            for (Map.Entry<Long, JobThread> item: jobThreadRepository.entrySet()) {
                 JobThread oldJobThread = removeJobThread(item.getKey(), "web container destroy and kill the job.");
                 // 等待作业线程推送结果到回调队列
                 if (oldJobThread != null) {
@@ -159,7 +159,7 @@ public class XxlJobExecutor  {
             jobThreadRepository.clear();
         }
         jobHandlerRepository.clear();
-        
+
         // 清理线程上下文映射
         JobThreadContext.getJobThreadContextMap().clear();
         logger.info(">>>>>>>>>>> xxl-job, JobThreadContext cleared");
@@ -169,7 +169,7 @@ public class XxlJobExecutor  {
 
         // 停止回调线程
         TriggerCallbackThread.getInstance().toStop();
-        
+
         // 停止任务线程监控
         JobThreadMonitorHelper.getInstance().toStop();
     }
@@ -179,11 +179,11 @@ public class XxlJobExecutor  {
     private static List<AdminBiz> adminBizList;
     /**
      * 初始化管理员客户端列表
-     * 
+     *
      * @param adminAddresses 管理员地址列表
      * @param accessToken 访问令牌
      * @param timeout 超时时间
-     * 
+     *
      * 该方法根据提供的地址列表创建管理员客户端实例，并添加到列表中。
      */
     private void initAdminBizList(String adminAddresses, String accessToken, int timeout) throws Exception {
@@ -211,13 +211,13 @@ public class XxlJobExecutor  {
 
     /**
      * 初始化嵌入式服务器
-     * 
+     *
      * @param address 服务器地址
      * @param ip 服务器IP
      * @param port 服务器端口
      * @param appname 应用名称
      * @param accessToken 访问令牌
-     * 
+     *
      * 该方法配置并启动嵌入式服务器，确保其能够接收和处理调度中心的请求。
      */
     private void initEmbedServer(String address, String ip, int port, String appname, String accessToken) throws Exception {
@@ -244,7 +244,7 @@ public class XxlJobExecutor  {
 
     /**
      * 停止嵌入式服务器
-     * 
+     *
      * 该方法停止嵌入式服务器的运行。
      */
     private void stopEmbedServer() {
@@ -266,10 +266,10 @@ public class XxlJobExecutor  {
     }
     /**
      * 注册作业处理器
-     * 
+     *
      * @param name 处理器名称
      * @param jobHandler 作业处理器实例
-     * 
+     *
      * 该方法将作业处理器注册到处理器仓库中。
      */
     public static IJobHandler registJobHandler(String name, IJobHandler jobHandler){
@@ -278,11 +278,11 @@ public class XxlJobExecutor  {
     }
     /**
      * 注册作业处理器
-     * 
+     *
      * @param xxlJob XXL作业注解
      * @param bean 作业处理器实例
      * @param executeMethod 执行方法
-     * 
+     *
      * 该方法根据注解信息注册作业处理器。
      */
     protected void registJobHandler(XxlJob xxlJob, Object bean, Method executeMethod){
@@ -341,17 +341,17 @@ public class XxlJobExecutor  {
 
 
     // ---------------------- job thread repository ----------------------
-    private static ConcurrentMap<Integer, JobThread> jobThreadRepository = new ConcurrentHashMap<Integer, JobThread>();
+    private static ConcurrentMap<Long, JobThread> jobThreadRepository = new ConcurrentHashMap<Long, JobThread>();
     /**
      * 注册作业线程
-     * 
+     *
      * @param jobId 作业ID
      * @param handler 作业处理器
      * @param removeOldReason 移除旧线程的原因
-     * 
+     *
      * 该方法创建并启动新的作业线程，并将其注册到线程仓库中。
      */
-    public static JobThread registJobThread(int jobId, IJobHandler handler, String removeOldReason){
+    public static JobThread registJobThread(Long jobId, IJobHandler handler, String removeOldReason){
         JobThread newJobThread = new JobThread(jobId, handler);
         newJobThread.start();
         logger.info(">>>>>>>>>>> xxl-job regist JobThread success, jobId:{}, handler:{}", new Object[]{jobId, handler});
@@ -361,7 +361,7 @@ public class XxlJobExecutor  {
             logger.warn("准备打断旧的任务...");
             oldJobThread.toStop(removeOldReason);
             oldJobThread.interrupt();
-            
+
             // 从任务线程上下文中移除旧线程
             JobThreadContext.removeJobThread(jobId);
         }
@@ -371,18 +371,18 @@ public class XxlJobExecutor  {
 
     /**
      * 移除作业线程
-     * 
+     *
      * @param jobId 作业ID
      * @param removeOldReason 移除旧线程的原因
-     * 
+     *
      * 该方法停止并移除指定的作业线程。
      */
-    public static JobThread removeJobThread(int jobId, String removeOldReason){
+    public static JobThread removeJobThread(Long jobId, String removeOldReason){
         JobThread oldJobThread = jobThreadRepository.remove(jobId);
         if (oldJobThread != null) {
             oldJobThread.toStop(removeOldReason);
             oldJobThread.interrupt();
-            
+
             // 从任务线程上下文中移除
             JobThreadContext.removeJobThread(jobId);
 
@@ -391,13 +391,13 @@ public class XxlJobExecutor  {
         return null;
     }
 
-    public static JobThread loadJobThread(int jobId){
+    public static JobThread loadJobThread(Long jobId){
         return jobThreadRepository.get(jobId);
     }
 
     /**
      * 获取当前正在运行的作业线程数量
-     * 
+     *
      * @return 作业线程数量
      */
     public static int getRunningJobThreadCount(){
@@ -407,7 +407,7 @@ public class XxlJobExecutor  {
     /**
      * 获取当前正在执行的任务数量
      * 包括正在运行的任务和队列中等待的任务
-     * 
+     *
      * @return 正在执行的任务数量
      */
     public static int getRunningTaskCount(){
@@ -419,10 +419,10 @@ public class XxlJobExecutor  {
         }
         return count;
     }
-    
+
     /**
      * 获取当前所有任务线程中等待执行的触发任务数量
-     * 
+     *
      * @return 等待执行的触发任务数量
      */
     public static int getPendingTaskCount(){

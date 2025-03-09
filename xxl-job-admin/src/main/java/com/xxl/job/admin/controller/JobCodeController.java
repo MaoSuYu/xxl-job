@@ -26,14 +26,14 @@ import java.util.List;
 @Controller
 @RequestMapping("/jobcode")
 public class JobCodeController {
-	
+
 	@Resource
 	private XxlJobInfoDao xxlJobInfoDao;
 	@Resource
 	private XxlJobLogGlueDao xxlJobLogGlueDao;
 
 	@RequestMapping
-	public String index(HttpServletRequest request, Model model, @RequestParam("jobId") int jobId) {
+	public String index(HttpServletRequest request, Model model, @RequestParam("jobId") Long jobId) {
 		XxlJobInfo jobInfo = xxlJobInfoDao.loadById(jobId);
 		List<XxlJobLogGlue> jobLogGlues = xxlJobLogGlueDao.findByJobId(jobId);
 
@@ -54,11 +54,11 @@ public class JobCodeController {
 		model.addAttribute("jobLogGlues", jobLogGlues);
 		return "jobcode/jobcode.index";
 	}
-	
+
 	@RequestMapping("/save")
 	@ResponseBody
 	public ReturnT<String> save(HttpServletRequest request,
-								@RequestParam("id") int id,
+								@RequestParam("id") Long id,
 								@RequestParam("glueSource") String glueSource,
 								@RequestParam("glueRemark") String glueRemark) {
 
@@ -76,7 +76,7 @@ public class JobCodeController {
 
 		// valid permission
 		PermissionInterceptor.validJobGroupPermission(request, existsJobInfo.getJobGroup());
-		
+
 		// update new code
 		existsJobInfo.setGlueSource(glueSource);
 		existsJobInfo.setGlueRemark(glueRemark);
@@ -97,9 +97,9 @@ public class JobCodeController {
 		xxlJobLogGlueDao.save(xxlJobLogGlue);
 
 		// remove code backup more than 30
-		xxlJobLogGlueDao.removeOld(existsJobInfo.getId(), 30);
+		xxlJobLogGlueDao.removeOld(existsJobInfo.getId(), 30L);
 
 		return ReturnT.SUCCESS;
 	}
-	
+
 }

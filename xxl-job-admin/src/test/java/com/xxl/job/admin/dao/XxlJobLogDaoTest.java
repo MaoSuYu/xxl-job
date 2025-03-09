@@ -21,7 +21,7 @@ public class XxlJobLogDaoTest {
 
         XxlJobLog log = new XxlJobLog();
         log.setJobGroup(1);
-        log.setJobId(1);
+        log.setJobId(1l);
 
         long ret1 = xxlJobLogDao.save(log);
         XxlJobLog dto = xxlJobLogDao.load(log.getId());

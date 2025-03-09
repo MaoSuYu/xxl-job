@@ -7,12 +7,12 @@ import java.util.Date;
  * @author xuxueli  2015-12-19 23:19:09
  */
 public class XxlJobLog {
-	
+
 	private long id;
-	
+
 	// job info
 	private int jobGroup;
-	private int jobId;
+	private Long jobId;
 
 	// execute info
 	private String executorAddress;
@@ -20,12 +20,12 @@ public class XxlJobLog {
 	private String executorParam;
 	private String executorShardingParam;
 	private int executorFailRetryCount;
-	
+
 	// trigger info
 	private Date triggerTime;
 	private int triggerCode;
 	private String triggerMsg;
-	
+
 	// handle info
 	private Date handleTime;
 	private int handleCode;
@@ -50,11 +50,11 @@ public class XxlJobLog {
 		this.jobGroup = jobGroup;
 	}
 
-	public int getJobId() {
+	public Long getJobId() {
 		return jobId;
 	}
 
-	public void setJobId(int jobId) {
+	public void setJobId(Long jobId) {
 		this.jobId = jobId;
 	}
 

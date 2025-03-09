@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xxl.job.admin.dao.XxlJobShardingInfoDao">
+
+    <insert id="save" parameterType="com.xxl.job.admin.core.model.XxlJobShardingInfo">
+        INSERT INTO xxl_job_sharding_info (
+                id,
+                parent_job_id,
+                params
+                ) VALUES (
+                                 #{id},
+                                 #{parentJobId},
+                                 #{params}
+                                 );
+    </insert>
+
+    <insert id="bathSave" parameterType="java.util.List">
+        INSERT INTO xxl_job_sharding_info (id, parent_job_id, params)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.id}, #{item.parentJobId}, #{item.params})
+        </foreach>
+    </insert>
+
+    <delete id="deleteByParentId">
+        delete from xxl_job_sharding_info where parent_job_id = #{id}
+    </delete>
+
+    <select id="findListByIds" resultType="com.xxl.job.admin.core.model.XxlJobShardingInfo">
+        select id,params from xxl_job_sharding_info where id in
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+</mapper>

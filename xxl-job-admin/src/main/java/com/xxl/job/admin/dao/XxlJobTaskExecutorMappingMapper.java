@@ -13,7 +13,7 @@ public interface XxlJobTaskExecutorMappingMapper {
     /**
      * 根据任务ID查询执行器地址
      */
-    String loadExecutorAddress(@Param("jobId") int jobId);
+    String loadExecutorAddress(@Param("jobId") Long jobId);
 
     /**
      * 保存或更新任务执行器映射
@@ -24,4 +24,4 @@ public interface XxlJobTaskExecutorMappingMapper {
      * 根据任务ID删除映射
      */
     int deleteByJobId(@Param("jobId") int jobId);
-} 
+}

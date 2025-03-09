@@ -37,7 +37,7 @@ public class ExecutorBizTest {
     public void idleBeat(){
         ExecutorBiz executorBiz = new ExecutorBizClient(addressUrl, accessToken, timeout);
 
-        final int jobId = 0;
+        final Long jobId = 0L;
 
         // Act
         final ReturnT<String> retval = executorBiz.idleBeat(new IdleBeatParam(jobId));
@@ -55,7 +55,7 @@ public class ExecutorBizTest {
 
         // trigger data
         final TriggerParam triggerParam = new TriggerParam();
-        triggerParam.setJobId(1);
+        triggerParam.setJobId(1l);
         triggerParam.setExecutorHandler("demoJobHandler");
         triggerParam.setExecutorParams(null);
         triggerParam.setExecutorBlockStrategy(ExecutorBlockStrategyEnum.COVER_EARLY.name());
@@ -76,7 +76,7 @@ public class ExecutorBizTest {
     public void kill(){
         ExecutorBiz executorBiz = new ExecutorBizClient(addressUrl, accessToken, timeout);
 
-        final int jobId = 0;
+        final Long jobId = 0l;
 
         // Act
         final ReturnT<String> retval = executorBiz.kill(new KillParam(jobId));

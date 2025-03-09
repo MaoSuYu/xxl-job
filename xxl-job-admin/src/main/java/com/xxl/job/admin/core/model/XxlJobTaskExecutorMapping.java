@@ -6,9 +6,9 @@ import java.sql.Date;
  * 任务执行器映射实体类
  */
 public class XxlJobTaskExecutorMapping {
-    
+
     private int id;
-    private int jobId;
+    private Long jobId;
     private String executorAddress;
     private Date updateTime;
     private Long groupId;
@@ -55,11 +55,11 @@ public class XxlJobTaskExecutorMapping {
         this.id = id;
     }
 
-    public int getJobId() {
+    public Long getJobId() {
         return jobId;
     }
 
-    public void setJobId(int jobId) {
+    public void setJobId(Long jobId) {
         this.jobId = jobId;
     }
 

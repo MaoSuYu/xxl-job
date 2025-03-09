@@ -26,7 +26,7 @@ import java.util.concurrent.*;
  * 任务处理线程
  * 每个JobThread实例负责执行一个具体的任务
  * 每个任务ID对应一个JobThread实例
- * 
+ *
  * @author xuxueli 2016-1-16 19:52:47
  */
 public class JobThread extends Thread{
@@ -34,7 +34,7 @@ public class JobThread extends Thread{
 	private static Logger logger = LoggerFactory.getLogger(JobThread.class);
 
 	// 任务ID，用于标识当前线程负责的任务
-	private int jobId;
+	private Long jobId;
 	// 任务处理器，用于实际执行任务逻辑
 	private IJobHandler handler;
 	// 触发器队列，存放待执行的任务触发参数
@@ -51,18 +51,18 @@ public class JobThread extends Thread{
     private boolean running = false;    // if running job
     // 空闲次数计数，用于检测长时间空闲的线程
 	private int idleTimes = 0;			// idle times
-	
+
 	// 线程启动时间
 	private long startTime = System.currentTimeMillis();
 
     /**
      * 构造方法
      * 初始化JobThread的相关参数
-     * 
+     *
      * @param jobId   任务ID
      * @param handler 任务处理器
      */
-	public JobThread(int jobId, IJobHandler handler) {
+	public JobThread(Long jobId, IJobHandler handler) {
 		this.jobId = jobId;
 		this.handler = handler;
 		// 初始化触发器队列
@@ -74,10 +74,10 @@ public class JobThread extends Thread{
 		this.setName("xxl-job, JobThread-"+jobId+"-"+System.currentTimeMillis());
 		JobThreadContext.setJobThreadContextMap(jobId, this);
 	}
-	
+
 	/**
      * 获取当前线程使用的任务处理器
-     * 
+     *
      * @return 任务处理器实例
      */
 	public IJobHandler getHandler() {
@@ -86,7 +86,7 @@ public class JobThread extends Thread{
 
 	/**
 	 * 获取线程启动时间
-	 * 
+	 *
 	 * @return 线程启动时间的时间戳
 	 */
 	public long getStartTime() {
@@ -133,7 +133,7 @@ public class JobThread extends Thread{
     /**
      * 检查任务是否正在运行或队列中有等待执行的任务
      * 用于外部判断此线程是否可以安全销毁
-     * 
+     *
      * @return 如果正在运行或队列不为空，返回true；否则返回false
      */
     public boolean isRunningOrHasQueue() {
@@ -142,7 +142,7 @@ public class JobThread extends Thread{
 
     /**
      * 从等待队列中移除指定任务
-     * 
+     *
      * @param jobId 任务ID
      * @return 是否成功移除
      */
@@ -163,7 +163,7 @@ public class JobThread extends Thread{
 
     /**
      * 获取等待执行的触发任务队列大小
-     * 
+     *
      * @return 触发队列大小
      */
     public int getPendingTriggerQueueSize() {
@@ -267,7 +267,7 @@ public class JobThread extends Thread{
 								:tempHandleMsg;
 						XxlJobContext.getXxlJobContext().setHandleMsg(tempHandleMsg);
 					}
-					
+
 					// 记录任务执行完成的日志
 					XxlJobHelper.log("<br>----------- xxl-job job execute end(finish) -----------<br>----------- Result: handleCode="
 							+ XxlJobContext.getXxlJobContext().getHandleCode()
@@ -353,7 +353,7 @@ public class JobThread extends Thread{
 
 		// 从任务线程上下文中移除当前线程
 		JobThreadContext.removeJobThread(jobId);
-		
+
 		// 记录线程停止日志
 		logger.info("工作线程已停止, thread name:{}", Thread.currentThread());
 	}

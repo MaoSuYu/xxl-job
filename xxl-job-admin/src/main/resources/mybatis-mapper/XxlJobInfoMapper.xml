@@ -36,6 +36,12 @@
 		<result column="trigger_status" property="triggerStatus" />
 		<result column="trigger_last_time" property="triggerLastTime" />
 		<result column="trigger_next_time" property="triggerNextTime" />
+
+		<result column="sharding_job_ids" property="shardingJobIds" />
+		<result column="first_scheduling_time" property="firstSchedulingTime" />
+		<result column="scheduling_dead_line" property="schedulingDeadline" />
+		<result column="data_interval" property="dataInterval" />
+		<result column="time_unit" property="timeUnit" />
 	</resultMap>
 
 	<sql id="Base_Column_List">
@@ -62,8 +68,13 @@
 		t.child_jobid,
 		t.trigger_status,
 		t.trigger_last_time,
-		t.trigger_next_time
-	</sql>
+		t.trigger_next_time,
+		t.sharding_job_ids,
+		t.first_scheduling_time,
+		t.scheduling_dead_line,
+		t.data_interval,
+		t.time_unit
+		</sql>
 
 	<select id="pageList" parameterType="java.util.HashMap" resultMap="XxlJobInfo">
 		SELECT <include refid="Base_Column_List" />
@@ -113,6 +124,7 @@
 
 	<insert id="save" parameterType="com.xxl.job.admin.core.model.XxlJobInfo" useGeneratedKeys="true" keyProperty="id" >
 		INSERT INTO xxl_job_info (
+		    id,
 			job_group,
 			job_desc,
 			add_time,
@@ -135,8 +147,14 @@
 			child_jobid,
 			trigger_status,
 			trigger_last_time,
-			trigger_next_time
+			trigger_next_time,
+		    sharding_job_ids,
+		    first_scheduling_time,
+		    scheduling_dead_line,
+		    data_interval,
+		    time_unit
 		) VALUES (
+		    #{id},
 			#{jobGroup},
 			#{jobDesc},
 			#{addTime},
@@ -159,7 +177,12 @@
 			#{childJobId},
 			#{triggerStatus},
 			#{triggerLastTime},
-			#{triggerNextTime}
+			#{triggerNextTime},
+		    #{shardingJobIds},
+		    #{firstSchedulingTime},
+		    #{schedulingDeadline},
+		    #{dataInterval},
+		    #{timeUnit}
 		);
 		<!--<selectKey resultType="java.lang.Integer" order="AFTER" keyProperty="id">
 			SELECT LAST_INSERT_ID()
@@ -247,10 +270,10 @@
 		JOIN xxl_job_group g ON i.job_group = g.id
 		WHERE i.id = #{jobId}
 	</select>
-	
+
 	<!-- 批量查询jobId对应的执行器组title -->
 	<select id="batchGetGroupTitleByJobIds" parameterType="java.util.List" resultType="java.util.Map">
-		SELECT 
+		SELECT
 			i.id AS jobId,
 			g.title AS title
 		FROM xxl_job_info i
@@ -261,4 +284,10 @@
 		</foreach>
 	</select>
 
+	<select id="loadByIds" resultMap="XxlJobInfo">
+		select * from xxl_job_info where id in
+		<foreach collection="ids" item="id" open="(" separator="," close=")">
+			#{id}
+		</foreach>
+	</select>
 </mapper>

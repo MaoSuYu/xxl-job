@@ -1,6 +1,7 @@
 package com.xxl.job.admin.core.thread;
 
 import com.xxl.job.admin.core.conf.XxlJobAdminConfig;
+import com.xxl.job.admin.core.model.XxlJobInfo;
 import com.xxl.job.admin.core.trigger.TriggerTypeEnum;
 import com.xxl.job.admin.core.trigger.XxlJobTrigger;
 import org.slf4j.Logger;
@@ -11,11 +12,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 任务触发线程池助手
- * 
+ *
  * 该类负责管理两个线程池：
  * 1. 快速触发线程池(fastTriggerPool)：用于处理普通任务
  * 2. 慢速触发线程池(slowTriggerPool)：用于处理执行时间较长的任务
- * 
+ *
  * 当任务在1分钟内出现超过10次超时(超过500ms)时，会被自动切换到慢速线程池处理
  *
  * @author xuxueli 2018-07-03 21:08:07
@@ -102,13 +103,13 @@ public class JobTriggerPoolHelper {
      * 当前分钟数，用于每分钟重置超时计数
      */
     private volatile long minTim = System.currentTimeMillis()/60000;     // ms > min
-    
+
     /**
      * 任务超时计数Map
      * key: jobId
      * value: 该任务在当前分钟内的超时次数
      */
-    private volatile ConcurrentMap<Integer, AtomicInteger> jobTimeoutCountMap = new ConcurrentHashMap<>();
+    private volatile ConcurrentMap<Long, AtomicInteger> jobTimeoutCountMap = new ConcurrentHashMap<>();
 
     /**
      * 添加任务触发请求到线程池
@@ -121,7 +122,7 @@ public class JobTriggerPoolHelper {
      * @param executorParam         执行参数
      * @param addressList           执行器地址列表
      */
-    public void addTrigger(final int jobId,
+    public void addTrigger(final XxlJobInfo jobInfo,
                            final TriggerTypeEnum triggerType,
                            final int failRetryCount,
                            final String executorShardingParam,
@@ -130,7 +131,7 @@ public class JobTriggerPoolHelper {
 
         // 根据任务超时情况选择线程池
         ThreadPoolExecutor triggerPool_ = fastTriggerPool;
-        AtomicInteger jobTimeoutCount = jobTimeoutCountMap.get(jobId);
+        AtomicInteger jobTimeoutCount = jobTimeoutCountMap.get(jobInfo.getId());
         if (jobTimeoutCount!=null && jobTimeoutCount.get() > 10) {      // 任务超时次数>10，使用慢速线程池
             triggerPool_ = slowTriggerPool;
         }
@@ -142,7 +143,7 @@ public class JobTriggerPoolHelper {
                 long start = System.currentTimeMillis();
                 try {
                     // 触发任务执行
-                    XxlJobTrigger.trigger(jobId, triggerType, failRetryCount, executorShardingParam, executorParam, addressList);
+                    XxlJobTrigger.trigger(jobInfo, triggerType, failRetryCount, executorShardingParam, executorParam, addressList);
                 } catch (Throwable e) {
                     logger.error(e.getMessage(), e);
                 } finally {
@@ -155,8 +156,8 @@ public class JobTriggerPoolHelper {
 
                     // 检查任务执行时间是否超过500ms，超过则增加超时计数
                     long cost = System.currentTimeMillis()-start;
-                    if (cost > 500) {       
-                        AtomicInteger timeoutCount = jobTimeoutCountMap.putIfAbsent(jobId, new AtomicInteger(1));
+                    if (cost > 500) {
+                        AtomicInteger timeoutCount = jobTimeoutCountMap.putIfAbsent(jobInfo.getId(), new AtomicInteger(1));
                         if (timeoutCount != null) {
                             timeoutCount.incrementAndGet();
                         }
@@ -165,7 +166,7 @@ public class JobTriggerPoolHelper {
             }
             @Override
             public String toString() {
-                return "Job Runnable, jobId:"+jobId;
+                return "Job Runnable, jobId:"+jobInfo.getId();
             }
         });
     }
@@ -195,7 +196,7 @@ public class JobTriggerPoolHelper {
      * 添加任务触发请求的静态方法
      * 通过单例实例调用addTrigger方法
      */
-    public static void trigger(int jobId, TriggerTypeEnum triggerType, int failRetryCount, String executorShardingParam, String executorParam, String addressList) {
-        helper.addTrigger(jobId, triggerType, failRetryCount, executorShardingParam, executorParam, addressList);
+    public static void trigger(XxlJobInfo jobInfo, TriggerTypeEnum triggerType, int failRetryCount, String executorShardingParam, String executorParam, String addressList) {
+        helper.addTrigger(jobInfo, triggerType, failRetryCount, executorShardingParam, executorParam, addressList);
     }
 }

@@ -12,13 +12,13 @@ import java.util.List;
  */
 @Mapper
 public interface XxlJobLogGlueDao {
-	
+
 	public int save(XxlJobLogGlue xxlJobLogGlue);
-	
-	public List<XxlJobLogGlue> findByJobId(@Param("jobId") int jobId);
 
-	public int removeOld(@Param("jobId") int jobId, @Param("limit") int limit);
+	public List<XxlJobLogGlue> findByJobId(@Param("jobId") Long jobId);
 
-	public int deleteByJobId(@Param("jobId") int jobId);
-	
+	public int removeOld(@Param("jobId") Long jobId, @Param("limit") Long limit);
+
+	public int deleteByJobId(@Param("jobId") Long jobId);
+
 }

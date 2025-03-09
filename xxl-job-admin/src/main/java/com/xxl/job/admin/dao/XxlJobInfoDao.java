@@ -29,13 +29,13 @@ public interface XxlJobInfoDao {
 							 @Param("jobDesc") String jobDesc,
 							 @Param("executorHandler") String executorHandler,
 							 @Param("author") String author);
-	
+
 	public int save(XxlJobInfo info);
 
-	public XxlJobInfo loadById(@Param("id") int id);
-	
+	public XxlJobInfo loadById(@Param("id") Long id);
+
 	public int update(XxlJobInfo xxlJobInfo);
-	
+
 	public int delete(@Param("id") long id);
 
 	public List<XxlJobInfo> getJobsByGroup(@Param("jobGroup") int jobGroup);
@@ -69,7 +69,7 @@ public interface XxlJobInfoDao {
 	 * @return 执行器组的title
 	 */
 	public String getGroupTitleByJobId(@Param("jobId") int jobId);
-	
+
 	/**
 	 * 批量查询jobId对应的执行器组title
 	 *
@@ -77,5 +77,7 @@ public interface XxlJobInfoDao {
 	 * @return Map<jobId, title>
 	 */
 	public List<Map<String, Object>> batchGetGroupTitleByJobIds(@Param("jobIds") List<Long> jobIds);
+
+	List<XxlJobInfo> loadByIds(@Param("ids") List<String> list);
 
 }

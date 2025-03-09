@@ -6,6 +6,7 @@ import com.xxl.job.admin.core.model.XxlJobInfo;
 import com.xxl.job.admin.core.scheduler.MisfireStrategyEnum;
 import com.xxl.job.admin.core.scheduler.ScheduleTypeEnum;
 import com.xxl.job.admin.core.trigger.TriggerTypeEnum;
+import com.xxl.job.admin.core.util.TimeConverterUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,6 +15,7 @@ import java.sql.PreparedStatement;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * 任务调度助手类
@@ -43,7 +45,7 @@ public class JobScheduleHelper {
     // 时间轮线程停止标志
     private volatile boolean ringThreadToStop = false;
     // 时间轮数据结构：key为秒数(0-59)，value为该秒需要触发的任务ID列表
-    private volatile static Map<Integer, List<Integer>> ringData = new ConcurrentHashMap<>();
+    private volatile static Map<Integer, List<Long>> ringData = new ConcurrentHashMap<>();
 
     public void start(){
         // 初始化并启动调度线程
@@ -98,7 +100,7 @@ public class JobScheduleHelper {
                                     MisfireStrategyEnum misfireStrategyEnum = MisfireStrategyEnum.match(jobInfo.getMisfireStrategy(), MisfireStrategyEnum.DO_NOTHING);
                                     if (MisfireStrategyEnum.FIRE_ONCE_NOW == misfireStrategyEnum) {
                                         // 立即执行一次
-                                        JobTriggerPoolHelper.trigger(jobInfo.getId(), TriggerTypeEnum.MISFIRE, -1, null, null, null);
+                                        JobTriggerPoolHelper.trigger(jobInfo, TriggerTypeEnum.MISFIRE, -1, null, null, null);
                                         logger.debug(">>>>>>>>>>> xxl-job, schedule push trigger : jobId = " + jobInfo.getId() );
                                     }
 
@@ -107,7 +109,7 @@ public class JobScheduleHelper {
 
                                 } else if (nowTime > jobInfo.getTriggerNextTime()) {
                                     // 2.2、任务过期小于5秒：直接触发一次，并更新下次触发时间
-                                    JobTriggerPoolHelper.trigger(jobInfo.getId(), TriggerTypeEnum.CRON, -1, null, null, null);
+                                    JobTriggerPoolHelper.trigger(jobInfo, TriggerTypeEnum.CRON, -1, null, null, null);
                                     logger.debug(">>>>>>>>>>> xxl-job, schedule push trigger : jobId = " + jobInfo.getId() );
 
                                     // 刷新下次触发时间
@@ -219,11 +221,11 @@ public class JobScheduleHelper {
 
                     try {
                         // 获取当前秒对应的待触发任务
-                        List<Integer> ringItemData = new ArrayList<>();
+                        List<Long> ringItemData = new ArrayList<>();
                         int nowSecond = Calendar.getInstance().get(Calendar.SECOND);
                         // 避免处理耗时过长跨过刻度，额外检查前一个刻度的任务
                         for (int i = 0; i < 2; i++) {
-                            List<Integer> tmpData = ringData.remove( (nowSecond+60-i)%60 );
+                            List<Long> tmpData = ringData.remove( (nowSecond+60-i)%60 );
                             if (tmpData != null) {
                                 ringItemData.addAll(tmpData);
                             }
@@ -232,9 +234,14 @@ public class JobScheduleHelper {
                         // 触发时间轮中的任务
                         logger.debug(">>>>>>>>>>> xxl-job, time-ring beat : " + nowSecond + " = " + Arrays.asList(ringItemData) );
                         if (ringItemData.size() > 0) {
-                            // 遍历触发任务
-                            for (int jobId: ringItemData) {
-                                JobTriggerPoolHelper.trigger(jobId, TriggerTypeEnum.CRON, -1, null, null, null);
+                            // 执行触发操作
+                            List<String> stringList = ringItemData.stream()
+                                    .map(String::valueOf)
+                                    .collect(Collectors.toList());
+                            List<XxlJobInfo> xxlJobInfos = XxlJobAdminConfig.getAdminConfig().getXxlJobInfoDao().loadByIds(stringList);
+                            for (XxlJobInfo xxlJobInfo: xxlJobInfos) {
+                                // 触发任务
+                                JobTriggerPoolHelper.trigger(xxlJobInfo, TriggerTypeEnum.CRON, -1, null, null, null);
                             }
                             ringItemData.clear();
                         }
@@ -289,11 +296,11 @@ public class JobScheduleHelper {
      * @param ringSecond 时间轮槽位（秒）
      * @param jobId 任务ID
      */
-    private void pushTimeRing(int ringSecond, int jobId){
+    private void pushTimeRing(int ringSecond, Long jobId){
         // 获取或创建该秒对应的任务列表
-        List<Integer> ringItemData = ringData.get(ringSecond);
+        List<Long> ringItemData = ringData.get(ringSecond);
         if (ringItemData == null) {
-            ringItemData = new ArrayList<Integer>();
+            ringItemData = new ArrayList<Long>();
             ringData.put(ringSecond, ringItemData);
         }
         ringItemData.add(jobId);
@@ -327,7 +334,7 @@ public class JobScheduleHelper {
         boolean hasRingData = false;
         if (!ringData.isEmpty()) {
             for (int second : ringData.keySet()) {
-                List<Integer> tmpData = ringData.get(second);
+                List<Long> tmpData = ringData.get(second);
                 if (tmpData!=null && tmpData.size()>0) {
                     hasRingData = true;
                     break;
@@ -378,6 +385,15 @@ public class JobScheduleHelper {
         } else if (ScheduleTypeEnum.FIX_RATE == scheduleTypeEnum /*|| ScheduleTypeEnum.FIX_DELAY == scheduleTypeEnum*/) {
             // 固定速率调度
             return new Date(fromTime.getTime() + Integer.valueOf(jobInfo.getScheduleConf())*1000 );
+        }else if (ScheduleTypeEnum.PERIOD == scheduleTypeEnum){
+            // 周期性调度
+            int dataInterval = jobInfo.getDataInterval();
+            String timeUnit = jobInfo.getTimeUnit();
+            long l = TimeConverterUtil.calculateTimestamp(dataInterval, timeUnit);
+            Date date = new Date(jobInfo.getTriggerNextTime() + l);
+            if (TimeConverterUtil.isNextValidTimeExceedDeadline(new Date(jobInfo.getTriggerNextTime() + l),jobInfo.getSchedulingDeadline())){
+                return date;
+            }
         }
         return null;
     }
