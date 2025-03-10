@@ -8,7 +8,7 @@ import org.springframework.context.annotation.ComponentScan;
  * @author xuxueli 2018-10-28 00:38:13
  */
 @SpringBootApplication
-@ComponentScan(basePackages = {"com.xuxueli"})
+@ComponentScan(basePackages = {"com.xuxueli","com.xxl"})
 public class XxlJobAdminApplication {
 
 	public static void main(String[] args) {
