@@ -70,7 +70,7 @@ public class XxlJobCompleter {
                             }
 
                             // trigger child job
-                            JobTriggerPoolHelper.trigger(childxxlJobInfo, TriggerTypeEnum.PARENT, -1, null, null, null);
+                            JobTriggerPoolHelper.triggerSharding(childxxlJobInfo, TriggerTypeEnum.PARENT, -1, null, null, null);
                             ReturnT<String> triggerChildResult = ReturnT.SUCCESS;
 
                             // add msg

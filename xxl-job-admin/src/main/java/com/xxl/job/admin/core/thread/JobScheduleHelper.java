@@ -100,7 +100,7 @@ public class JobScheduleHelper {
                                     MisfireStrategyEnum misfireStrategyEnum = MisfireStrategyEnum.match(jobInfo.getMisfireStrategy(), MisfireStrategyEnum.DO_NOTHING);
                                     if (MisfireStrategyEnum.FIRE_ONCE_NOW == misfireStrategyEnum) {
                                         // 立即执行一次
-                                        JobTriggerPoolHelper.trigger(jobInfo, TriggerTypeEnum.MISFIRE, -1, null, null, null);
+                                        JobTriggerPoolHelper.triggerSharding(jobInfo, TriggerTypeEnum.MISFIRE, -1, null, null, null);
                                         logger.debug(">>>>>>>>>>> xxl-job, schedule push trigger : jobId = " + jobInfo.getId() );
                                     }
 
@@ -109,7 +109,7 @@ public class JobScheduleHelper {
 
                                 } else if (nowTime > jobInfo.getTriggerNextTime()) {
                                     // 2.2、任务过期小于5秒：直接触发一次，并更新下次触发时间
-                                    JobTriggerPoolHelper.trigger(jobInfo, TriggerTypeEnum.CRON, -1, null, null, null);
+                                    JobTriggerPoolHelper.triggerSharding(jobInfo, TriggerTypeEnum.CRON, -1, null, null, null);
                                     logger.debug(">>>>>>>>>>> xxl-job, schedule push trigger : jobId = " + jobInfo.getId() );
 
                                     // 刷新下次触发时间
@@ -241,7 +241,7 @@ public class JobScheduleHelper {
                             List<XxlJobInfo> xxlJobInfos = XxlJobAdminConfig.getAdminConfig().getXxlJobInfoDao().loadByIds(stringList);
                             for (XxlJobInfo xxlJobInfo: xxlJobInfos) {
                                 // 触发任务
-                                JobTriggerPoolHelper.trigger(xxlJobInfo, TriggerTypeEnum.CRON, -1, null, null, null);
+                                JobTriggerPoolHelper.triggerSharding(xxlJobInfo, TriggerTypeEnum.CRON, -1, null, null, null);
                             }
                             ringItemData.clear();
                         }

@@ -406,7 +406,7 @@ public class XxlJobServiceImpl implements XxlJobService {
 		}
 
 		// 使用JobTriggerPoolHelper触发任务
-		JobTriggerPoolHelper.trigger(xxlJobInfo, TriggerTypeEnum.MANUAL, -1, null, executorParam, addressList);
+		JobTriggerPoolHelper.trigger(jobId, TriggerTypeEnum.MANUAL, -1, null, executorParam, addressList);
 		return ReturnT.SUCCESS;
 	}
 
@@ -505,7 +505,7 @@ public class XxlJobServiceImpl implements XxlJobService {
 		XxlJobAdminConfig.getAdminConfig().getXxlJobShardingInfoDao().bathSave(xxlJobShardingInfos);
 		// 自动触发即按照首次时间触发，否则执行一次
 		if (ObjectUtils.isEmpty(isAutomatic)||isAutomatic != 1) {
-			JobTriggerPoolHelper.trigger(xxlJobInfo, TriggerTypeEnum.MANUAL, -1, null, null, null);
+			JobTriggerPoolHelper.triggerSharding(xxlJobInfo, TriggerTypeEnum.MANUAL, -1, null, null, null);
 		}
 		return ReturnT.SUCCESS;
 	}

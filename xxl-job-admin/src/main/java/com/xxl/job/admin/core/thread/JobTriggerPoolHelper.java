@@ -112,17 +112,75 @@ public class JobTriggerPoolHelper {
     private volatile ConcurrentMap<Long, AtomicInteger> jobTimeoutCountMap = new ConcurrentHashMap<>();
 
     /**
+     * add trigger
+     */
+    public void addTrigger(final Long jobId,
+                           final TriggerTypeEnum triggerType,
+                           final int failRetryCount,
+                           final String executorShardingParam,
+                           final String executorParam,
+                           final String addressList) {
+
+        // choose thread pool
+        ThreadPoolExecutor triggerPool_ = fastTriggerPool;
+        AtomicInteger jobTimeoutCount = jobTimeoutCountMap.get(jobId);
+        if (jobTimeoutCount!=null && jobTimeoutCount.get() > 10) {      // job-timeout 10 times in 1 min
+            triggerPool_ = slowTriggerPool;
+        }
+
+        // trigger
+        triggerPool_.execute(new Runnable() {
+            @Override
+            public void run() {
+
+                long start = System.currentTimeMillis();
+
+                try {
+                    // do trigger
+                    XxlJobTrigger.trigger(jobId, triggerType, failRetryCount, executorShardingParam, executorParam, addressList);
+                } catch (Throwable e) {
+                    logger.error(e.getMessage(), e);
+                } finally {
+
+                    // check timeout-count-map
+                    long minTim_now = System.currentTimeMillis()/60000;
+                    if (minTim != minTim_now) {
+                        minTim = minTim_now;
+                        jobTimeoutCountMap.clear();
+                    }
+
+                    // incr timeout-count-map
+                    long cost = System.currentTimeMillis()-start;
+                    if (cost > 500) {       // ob-timeout threshold 500ms
+                        AtomicInteger timeoutCount = jobTimeoutCountMap.putIfAbsent(jobId, new AtomicInteger(1));
+                        if (timeoutCount != null) {
+                            timeoutCount.incrementAndGet();
+                        }
+                    }
+
+                }
+
+            }
+            @Override
+            public String toString() {
+                return "Job Runnable, jobId:"+jobId;
+            }
+        });
+    }
+
+
+    /**
      * 添加任务触发请求到线程池
      * 根据任务的超时情况选择合适的线程池执行
      *
-     * @param jobId                 任务ID
+     * @param jobInfo                 任务
      * @param triggerType           触发类型
      * @param failRetryCount        失败重试次数
      * @param executorShardingParam 分片参数
      * @param executorParam         执行参数
      * @param addressList           执行器地址列表
      */
-    public void addTrigger(final XxlJobInfo jobInfo,
+    public void addTriggerSharding(final XxlJobInfo jobInfo,
                            final TriggerTypeEnum triggerType,
                            final int failRetryCount,
                            final String executorShardingParam,
@@ -143,7 +201,7 @@ public class JobTriggerPoolHelper {
                 long start = System.currentTimeMillis();
                 try {
                     // 触发任务执行
-                    XxlJobTrigger.trigger(jobInfo, triggerType, failRetryCount, executorShardingParam, executorParam, addressList);
+                    XxlJobTrigger.triggerSharding(jobInfo, triggerType, failRetryCount, executorShardingParam, executorParam, addressList);
                 } catch (Throwable e) {
                     logger.error(e.getMessage(), e);
                 } finally {
@@ -196,7 +254,23 @@ public class JobTriggerPoolHelper {
      * 添加任务触发请求的静态方法
      * 通过单例实例调用addTrigger方法
      */
-    public static void trigger(XxlJobInfo jobInfo, TriggerTypeEnum triggerType, int failRetryCount, String executorShardingParam, String executorParam, String addressList) {
-        helper.addTrigger(jobInfo, triggerType, failRetryCount, executorShardingParam, executorParam, addressList);
+    public static void triggerSharding(XxlJobInfo jobInfo, TriggerTypeEnum triggerType, int failRetryCount, String executorShardingParam, String executorParam, String addressList) {
+        helper.addTriggerSharding(jobInfo, triggerType, failRetryCount, executorShardingParam, executorParam, addressList);
     }
+
+    /**
+     * @param jobId
+     * @param triggerType
+     * @param failRetryCount
+     * 			>=0: use this param
+     * 			<0: use param from job info config
+     * @param executorShardingParam
+     * @param executorParam
+     *          null: use job param
+     *          not null: cover job param
+     */
+    public static void trigger(Long jobId, TriggerTypeEnum triggerType, int failRetryCount, String executorShardingParam, String executorParam, String addressList) {
+        helper.addTrigger(jobId, triggerType, failRetryCount, executorShardingParam, executorParam, addressList);
+    }
+
 }
