@@ -8,6 +8,7 @@ import com.xxl.job.admin.core.trigger.TriggerTypeEnum;
 import com.xxl.job.admin.core.util.I18nUtil;
 import com.xxl.job.core.biz.model.ReturnT;
 import com.xxl.job.core.context.XxlJobContext;
+import com.xxl.job.core.enums.ExecutionStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.ObjectUtils;
@@ -18,12 +19,12 @@ import java.util.List;
 
 /**
  * 任务完成处理器
- * 
+ *
  * 该类负责处理任务执行完成后的相关操作，包括：
  * 1. 更新任务执行日志的处理信息
  * 2. 处理任务执行成功后的子任务触发
  * 3. 完成任务的收尾工作
- * 
+ *
  * @author xuxueli 2020-10-30 20:43:10
  */
 public class XxlJobCompleter {
@@ -34,12 +35,12 @@ public class XxlJobCompleter {
 
     /**
      * 任务完成处理的统一入口
-     * 
+     *
      * 该方法是任务完成处理的主要入口，负责：
      * 1. 调用finishJob完成任务的收尾工作（如触发子任务等）
      * 2. 截断过长的处理消息，避免数据库存储问题
      * 3. 更新任务日志的处理信息到数据库
-     * 
+     *
      * 注意：该方法确保任务完成处理只执行一次
      *
      * @param xxlJobLog 任务日志对象，包含任务执行的相关信息
@@ -54,7 +55,10 @@ public class XxlJobCompleter {
         if (xxlJobLog.getHandleMsg().length() > 15000) {
             xxlJobLog.setHandleMsg( xxlJobLog.getHandleMsg().substring(0, 15000) );
         }
-
+        // 更新子任务的状态信息等。。
+        int statusCode = (xxlJobLog.getHandleCode() == 200) ? ExecutionStatus.SUCCESS.getCode() : ExecutionStatus.FAILED.getCode();
+        XxlJobAdminConfig.getAdminConfig().getXxlJobShardingInfoDao().updateExecuteInfo(statusCode,xxlJobLog.getJobId());
+        
         // 调用DAO层方法更新任务日志的处理信息到数据库，并返回影响的行数
         return XxlJobAdminConfig.getAdminConfig().getXxlJobLogDao().updateHandleInfo(xxlJobLog);
     }
@@ -62,12 +66,12 @@ public class XxlJobCompleter {
 
     /**
      * 完成任务的收尾工作
-     * 
+     *
      * 该方法负责处理任务执行完成后的后续操作，主要包括：
      * 1. 如果任务执行成功，检查并触发配置的子任务
      * 2. 为任务日志添加子任务触发的相关信息
      * 3. 处理定时触发下一次任务的逻辑（待实现）
-     * 
+     *
      * @param xxlJobLog 任务日志对象，包含任务执行的相关信息
      */
     private static void finishJob(XxlJobLog xxlJobLog){
@@ -143,9 +147,9 @@ public class XxlJobCompleter {
 
     /**
      * 判断字符串是否为数字
-     * 
+     *
      * 该方法用于检查给定的字符串是否可以转换为整数，主要用于验证子任务ID的有效性。
-     * 
+     *
      * @param str 需要检查的字符串
      * @return 如果字符串可以转换为整数则返回true，否则返回false
      */

@@ -37,7 +37,6 @@
 		<result column="trigger_last_time" property="triggerLastTime" />
 		<result column="trigger_next_time" property="triggerNextTime" />
 
-		<result column="sharding_job_ids" property="shardingJobIds" />
 		<result column="first_scheduling_time" property="firstSchedulingTime" />
 		<result column="scheduling_dead_line" property="schedulingDeadline" />
 		<result column="data_interval" property="dataInterval" />
@@ -69,7 +68,6 @@
 		t.trigger_status,
 		t.trigger_last_time,
 		t.trigger_next_time,
-		t.sharding_job_ids,
 		t.first_scheduling_time,
 		t.scheduling_dead_line,
 		t.data_interval,
@@ -148,7 +146,6 @@
 			trigger_status,
 			trigger_last_time,
 			trigger_next_time,
-		    sharding_job_ids,
 		    first_scheduling_time,
 		    scheduling_dead_line,
 		    data_interval,
@@ -178,7 +175,6 @@
 			#{triggerStatus},
 			#{triggerLastTime},
 			#{triggerNextTime},
-		    #{shardingJobIds},
 		    #{firstSchedulingTime},
 		    #{schedulingDeadline},
 		    #{dataInterval},

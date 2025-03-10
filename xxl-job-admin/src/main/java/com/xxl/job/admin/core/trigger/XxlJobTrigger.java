@@ -10,6 +10,7 @@ import com.xxl.job.admin.core.scheduler.XxlJobScheduler;
 import com.xxl.job.admin.core.util.I18nUtil;
 import cn.hutool.core.util.StrUtil;
 import com.xxl.job.admin.core.model.XxlJobShardingInfo;
+import com.xxl.job.core.enums.ExecutionStatus;
 import org.springframework.beans.BeanUtils;
 import com.xxl.job.core.biz.ExecutorBiz;
 import com.xxl.job.core.biz.model.ReturnT;
@@ -262,7 +263,6 @@ public class XxlJobTrigger {
         jobLog.setTriggerCode(triggerResult.getCode());
         jobLog.setTriggerMsg(triggerMsgSb.toString());
         XxlJobAdminConfig.getAdminConfig().getXxlJobLogDao().updateTriggerInfo(jobLog);
-
         logger.debug(">>>>>>>>>>> xxl-job trigger end, jobId:{}", jobLog.getId());
     }
 
@@ -290,26 +290,22 @@ public class XxlJobTrigger {
         // 该方法确保任务调度时能够正确应用配置的阻塞策略。
         ExecutorBlockStrategyEnum blockStrategy = ExecutorBlockStrategyEnum.match(jobInfo.getExecutorBlockStrategy(), ExecutorBlockStrategyEnum.SERIAL_EXECUTION);  // block strategy
         ExecutorRouteStrategyEnum executorRouteStrategyEnum = ExecutorRouteStrategyEnum.match(jobInfo.getExecutorRouteStrategy(), null);    // route strategy
-        String shardingParam = (ExecutorRouteStrategyEnum.SHARDING_BROADCAST==executorRouteStrategyEnum)?String.valueOf(index).concat("/").concat(String.valueOf(total)):null;
+        String shardingParam = (ExecutorRouteStrategyEnum.SHARDING_BROADCAST == executorRouteStrategyEnum) ? String.valueOf(index).concat("/").concat(String.valueOf(total)) : null;
 
-        String shardingJobIdStr = jobInfo.getShardingJobIds();
-        if (StrUtil.isNotBlank(shardingJobIdStr)) {
-            List<String> shardingJobIds = StrUtil.split(shardingJobIdStr, ',', true, true);
-            List<XxlJobShardingInfo> listByIds = XxlJobAdminConfig.getAdminConfig().getXxlJobShardingInfoDao().findListByIds(shardingJobIds);
-            List<XxlJobInfo> ShardingInfos = new ArrayList<>();
-            for (XxlJobShardingInfo shardingInfo : listByIds) {
-                XxlJobInfo xxlJobInfo = new XxlJobInfo();
-                BeanUtils.copyProperties(jobInfo, xxlJobInfo);
+        List<XxlJobShardingInfo> listByIds = XxlJobAdminConfig.getAdminConfig().getXxlJobShardingInfoDao().findListByParentJobId(jobInfo.getId());
+        List<XxlJobInfo> ShardingInfos = new ArrayList<>();
+        for (XxlJobShardingInfo shardingInfo : listByIds) {
+            XxlJobInfo xxlJobInfo = new XxlJobInfo();
+            BeanUtils.copyProperties(jobInfo, xxlJobInfo);
 
-                xxlJobInfo.setId(shardingInfo.getId());
-                xxlJobInfo.setExecutorParam(shardingInfo.getParams());
-                ShardingInfos.add(xxlJobInfo);
-            }
+            xxlJobInfo.setId(shardingInfo.getId());
+            xxlJobInfo.setExecutorParam(shardingInfo.getParams());
+            ShardingInfos.add(xxlJobInfo);
+        }
 
-            // 循环执行任务
-            for (XxlJobInfo shardingInfo : ShardingInfos) {
-                triggerJobInfo(group, shardingInfo, finalFailRetryCount, triggerType, index, total, blockStrategy, executorRouteStrategyEnum, shardingParam);
-            }
+        // 循环执行任务
+        for (XxlJobInfo shardingInfo : ShardingInfos) {
+            triggerJobInfo(group, shardingInfo, finalFailRetryCount, triggerType, index, total, blockStrategy, executorRouteStrategyEnum, shardingParam);
         }
     }
 
@@ -393,7 +389,9 @@ public class XxlJobTrigger {
         jobLog.setTriggerCode(triggerResult.getCode());
         jobLog.setTriggerMsg(triggerMsgSb.toString());
         XxlJobAdminConfig.getAdminConfig().getXxlJobLogDao().updateTriggerInfo(jobLog);
-
+        // 更新子任务的执行状态以及次数
+        //int statusCode = (triggerResult.getCode() == 200) ? ExecutionStatus.TRIGGERRING.getCode() : ExecutionStatus.NOT_TRIGGER.getCode();
+        //XxlJobAdminConfig.getAdminConfig().getXxlJobShardingInfoDao().updateTriggerInfo(statusCode, jobInfo.getId());
         logger.debug(">>>>>>>>>>> xxl-job trigger end, jobId:{}", jobLog.getId());
     }
 

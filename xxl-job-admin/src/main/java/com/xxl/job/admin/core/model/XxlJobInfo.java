@@ -53,11 +53,6 @@ public class XxlJobInfo {
 	private String schedulingDeadline;
 
 	/**
-	 * 分片任务id，id*
-	 */
-	private String shardingJobIds;
-
-	/**
 	 * 数据时间间隔数
 	 */
 	private int dataInterval;
@@ -66,6 +61,32 @@ public class XxlJobInfo {
 	 *  数据时间间隔数单位
 	 */
 	private String timeUnit;
+
+	/**
+	 * 执行间隔数
+	 */
+	private int schedulingInterval;
+
+	/**
+	 * 执行间隔单位
+	 */
+	private String schedulingCycle;
+
+	public int getSchedulingInterval() {
+		return schedulingInterval;
+	}
+
+	public void setSchedulingInterval(int schedulingInterval) {
+		this.schedulingInterval = schedulingInterval;
+	}
+
+	public String getSchedulingCycle() {
+		return schedulingCycle;
+	}
+
+	public void setSchedulingCycle(String schedulingCycle) {
+		this.schedulingCycle = schedulingCycle;
+	}
 
 	public int getDataInterval() {
 		return dataInterval;
@@ -98,15 +119,6 @@ public class XxlJobInfo {
 	public void setSchedulingDeadline(String schedulingDeadline) {
 		this.schedulingDeadline = schedulingDeadline;
 	}
-
-	public String getShardingJobIds() {
-		return shardingJobIds;
-	}
-
-	public void setShardingJobIds(String shardingJobIds) {
-		this.shardingJobIds = shardingJobIds;
-	}
-
 
 	public Long getId() {
 		return id;
