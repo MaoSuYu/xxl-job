@@ -48,10 +48,10 @@ public class SampleXxlJob {
 //        }
 //        TimeUnit.SECONDS.sleep(15);
 //        TimeUnit.DAYS.sleep(1);
-        while (true) {
-            System.err.println("执行中...");
-            TimeUnit.SECONDS.sleep(1);
-        }
+//        while (true) {
+//            System.err.println("执行中...");
+//            TimeUnit.SECONDS.sleep(1);
+//        }
 //        throw new RuntimeException();
     }
 

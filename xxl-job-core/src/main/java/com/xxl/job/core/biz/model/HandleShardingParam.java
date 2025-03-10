@@ -30,6 +30,20 @@ public class HandleShardingParam {
      */
     private int isAutomatic;
 
+    /**
+     * 优先级 越低越高
+     * @return
+     */
+    private int priority;
+
+    public int getPriority() {
+        return priority;
+    }
+
+    public void setPriority(int priority) {
+        this.priority = priority;
+    }
+
     public int getIsAutomatic() {
         return isAutomatic;
     }

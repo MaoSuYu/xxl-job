@@ -1,5 +1,8 @@
 package com.xxl.job.admin.core.trigger;
 
+import cn.hutool.extra.spring.SpringUtil;
+import com.xuxueli.springbootpriorityqueue.service.SortedTaskService;
+import com.xuxueli.springbootpriorityqueue.service.TaskService;
 import com.xxl.job.admin.core.conf.XxlJobAdminConfig;
 import com.xxl.job.admin.core.model.JobRegistryEntity;
 import com.xxl.job.admin.core.model.XxlJobGroup;
@@ -104,7 +107,7 @@ public class XxlJobTrigger {
     /**
      * trigger job
      *
-     * @param jobInfo
+     * @param jobId
      * @param triggerType
      * @param failRetryCount
      * 			>=0: use this param
@@ -117,13 +120,17 @@ public class XxlJobTrigger {
      *          null: use executor addressList
      *          not null: cover
      */
-    public static void triggerSharding(XxlJobInfo jobInfo,
+    public static void triggerSharding(Long jobId,
                                TriggerTypeEnum triggerType,
                                int failRetryCount,
                                String executorShardingParam,
                                String executorParam,
                                String addressList) {
-
+        XxlJobInfo jobInfo = XxlJobAdminConfig.getAdminConfig().getXxlJobInfoDao().loadById(jobId);
+        if (jobInfo == null) {
+            logger.warn(">>>>>>>>>>>> trigger fail, jobId invalid，jobId={}", jobId);
+            return;
+        }
         if (executorParam != null) {
             jobInfo.setExecutorParam(executorParam);
         }

@@ -58,7 +58,7 @@ public class XxlJobCompleter {
         // 更新子任务的状态信息等。。
         int statusCode = (xxlJobLog.getHandleCode() == 200) ? ExecutionStatus.SUCCESS.getCode() : ExecutionStatus.FAILED.getCode();
         XxlJobAdminConfig.getAdminConfig().getXxlJobShardingInfoDao().updateExecuteInfo(statusCode,xxlJobLog.getJobId());
-        
+
         // 调用DAO层方法更新任务日志的处理信息到数据库，并返回影响的行数
         return XxlJobAdminConfig.getAdminConfig().getXxlJobLogDao().updateHandleInfo(xxlJobLog);
     }
@@ -110,7 +110,7 @@ public class XxlJobCompleter {
 
                             // 通过任务触发池帮助类触发子任务，使用分片触发方式
                             // 参数说明：子任务信息、触发类型为父任务触发、分片索引为-1（不分片）、无分片总数、无分片参数、无执行参数
-                            JobTriggerPoolHelper.triggerSharding(childxxlJobInfo, TriggerTypeEnum.PARENT, -1, null, null, null);
+                            JobTriggerPoolHelper.triggerSharding((long)childJobId, TriggerTypeEnum.PARENT, -1, null, null, null);
                             // 设置触发结果为成功
                             ReturnT<String> triggerChildResult = ReturnT.SUCCESS;
 

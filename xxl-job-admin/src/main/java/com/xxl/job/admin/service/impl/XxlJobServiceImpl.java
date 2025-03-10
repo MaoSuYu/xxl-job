@@ -2,6 +2,10 @@ package com.xxl.job.admin.service.impl;
 
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.json.JSONUtil;
+import com.xuxueli.springbootpriorityqueue.model.SortedTask;
+import com.xuxueli.springbootpriorityqueue.model.Task;
+import com.xuxueli.springbootpriorityqueue.service.SortedTaskService;
+import com.xuxueli.springbootpriorityqueue.service.TaskService;
 import com.xxl.job.admin.core.conf.XxlJobAdminConfig;
 import com.xxl.job.admin.core.cron.CronExpression;
 import com.xxl.job.admin.core.model.*;
@@ -50,6 +54,12 @@ public class XxlJobServiceImpl implements XxlJobService {
 	private XxlJobLogGlueDao xxlJobLogGlueDao;
 	@Resource
 	private XxlJobLogReportDao xxlJobLogReportDao;
+
+	@Resource
+	private TaskService taskService;
+
+	@Resource
+	private SortedTaskService sortedTaskService;
 
 	@Override
 	public Map<String, Object> pageList(int start, int length, int jobGroup, int triggerStatus, String jobDesc, String executorHandler, String author) {
@@ -472,6 +482,7 @@ public class XxlJobServiceImpl implements XxlJobService {
 		xxlJobInfo.setAddTime(new Date());
 		xxlJobInfo.setUpdateTime(new Date());
 		xxlJobInfo.setJobDesc("同步任务");
+		xxlJobInfo.setPriority(handleShardingParam.getPriority());
 		xxlJobInfo.setScheduleType(ScheduleTypeEnum.PERIOD.name());
 		xxlJobInfo.setMisfireStrategy(MisfireStrategyEnum.DO_NOTHING.name());
 		xxlJobInfo.setExecutorRouteStrategy(ExecutorRouteStrategyEnum.FIRST.name());
@@ -530,7 +541,10 @@ public class XxlJobServiceImpl implements XxlJobService {
 	// 触发任务
 	private void triggerTask(XxlJobInfo xxlJobInfo, Integer isAutomatic) {
 		if (isAutomatic == null || isAutomatic != 1) {
-			JobTriggerPoolHelper.triggerSharding(xxlJobInfo, TriggerTypeEnum.MANUAL, -1, null, null, null);
+			sortedTaskService.addTask(new SortedTask(xxlJobInfo.getId().toString(),xxlJobInfo.getJobDesc(),xxlJobInfo.getJobDesc(),xxlJobInfo.getPriority()));
+			//JobTriggerPoolHelper.triggerSharding(id, TriggerTypeEnum.MANUAL, -1, null, null, null);
+		} else {
+			taskService.addTask(new Task(xxlJobInfo.getId().toString(),xxlJobInfo.getJobDesc(),xxlJobInfo.getJobDesc()),xxlJobInfo.getPriority());
 		}
 	}
 

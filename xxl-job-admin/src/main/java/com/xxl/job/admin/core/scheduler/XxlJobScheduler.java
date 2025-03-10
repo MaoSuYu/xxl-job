@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentMap;
  * XXL-JOB 调度器核心类
  * 负责调度系统的初始化、启动和销毁
  * 被 XxlJobAdminConfig 通过 Spring 容器初始化时调用
- * 
+ *
  * @author xuxueli 2018-10-28 00:18:17
  */
 public class XxlJobScheduler  {
@@ -56,6 +56,8 @@ public class XxlJobScheduler  {
         // 启动任务调度线程
         // 依赖于触发线程池，负责任务的调度触发
         JobScheduleHelper.getInstance().start();
+        //
+        TaskQueueHelper.getInstance().start();
 
         logger.info(">>>>>>>>> init xxl-job admin success.");
     }

@@ -1,5 +1,9 @@
 package com.xxl.job.admin.core.thread;
 
+import cn.hutool.extra.spring.SpringUtil;
+import com.xuxueli.springbootpriorityqueue.model.Task;
+import com.xuxueli.springbootpriorityqueue.service.SortedTaskService;
+import com.xuxueli.springbootpriorityqueue.service.TaskService;
 import com.xxl.job.admin.core.conf.XxlJobAdminConfig;
 import com.xxl.job.admin.core.cron.CronExpression;
 import com.xxl.job.admin.core.model.XxlJobInfo;
@@ -65,7 +69,7 @@ public class JobScheduleHelper {
                 // 预读任务数量 = (快线程池大小 + 慢线程池大小) * 每秒触发频率
                 // 假设每个任务触发耗时50ms，则每秒可触发20个任务
                 int preReadCount = (XxlJobAdminConfig.getAdminConfig().getTriggerPoolFastMax() + XxlJobAdminConfig.getAdminConfig().getTriggerPoolSlowMax()) * 20;
-
+                TaskService taskService = (TaskService)SpringUtil.getBean("taskService");
                 while (!scheduleThreadToStop) {
                     // 扫描任务
                     long start = System.currentTimeMillis();
@@ -99,8 +103,9 @@ public class JobScheduleHelper {
                                     // 处理过期任务
                                     MisfireStrategyEnum misfireStrategyEnum = MisfireStrategyEnum.match(jobInfo.getMisfireStrategy(), MisfireStrategyEnum.DO_NOTHING);
                                     if (MisfireStrategyEnum.FIRE_ONCE_NOW == misfireStrategyEnum) {
+                                        taskService.addTask(new Task(jobInfo.getId().toString(),jobInfo.getJobDesc(),jobInfo.getJobDesc()),jobInfo.getPriority());
                                         // 立即执行一次
-                                        JobTriggerPoolHelper.triggerSharding(jobInfo, TriggerTypeEnum.MISFIRE, -1, null, null, null);
+                                        //JobTriggerPoolHelper.triggerSharding(jobInfo, TriggerTypeEnum.MISFIRE, -1, null, null, null);
                                         logger.debug(">>>>>>>>>>> xxl-job, schedule push trigger : jobId = " + jobInfo.getId() );
                                     }
 
@@ -109,7 +114,9 @@ public class JobScheduleHelper {
 
                                 } else if (nowTime > jobInfo.getTriggerNextTime()) {
                                     // 2.2、任务过期小于5秒：直接触发一次，并更新下次触发时间
-                                    JobTriggerPoolHelper.triggerSharding(jobInfo, TriggerTypeEnum.CRON, -1, null, null, null);
+
+                                    taskService.addTask(new Task(jobInfo.getId().toString(),jobInfo.getJobDesc(),jobInfo.getJobDesc()),jobInfo.getPriority());
+                                    //JobTriggerPoolHelper.triggerSharding(jobInfo, TriggerTypeEnum.CRON, -1, null, null, null);
                                     logger.debug(">>>>>>>>>>> xxl-job, schedule push trigger : jobId = " + jobInfo.getId() );
 
                                     // 刷新下次触发时间
@@ -241,7 +248,9 @@ public class JobScheduleHelper {
                             List<XxlJobInfo> xxlJobInfos = XxlJobAdminConfig.getAdminConfig().getXxlJobInfoDao().loadByIds(stringList);
                             for (XxlJobInfo xxlJobInfo: xxlJobInfos) {
                                 // 触发任务
-                                JobTriggerPoolHelper.triggerSharding(xxlJobInfo, TriggerTypeEnum.CRON, -1, null, null, null);
+                                TaskService taskService = (TaskService)SpringUtil.getBean("taskService");
+                                taskService.addTask(new Task(xxlJobInfo.getId().toString(),xxlJobInfo.getJobDesc(),xxlJobInfo.getJobDesc()),xxlJobInfo.getPriority());
+                                //JobTriggerPoolHelper.triggerSharding(xxlJobInfo, TriggerTypeEnum.CRON, -1, null, null, null);
                             }
                             ringItemData.clear();
                         }

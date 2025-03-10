@@ -1,5 +1,8 @@
 package com.xxl.job.admin.core.thread;
 
+import cn.hutool.extra.spring.SpringUtil;
+import com.xuxueli.springbootpriorityqueue.service.SortedTaskService;
+import com.xuxueli.springbootpriorityqueue.service.TaskService;
 import com.xxl.job.admin.core.conf.XxlJobAdminConfig;
 import com.xxl.job.admin.core.model.XxlJobInfo;
 import com.xxl.job.admin.core.trigger.TriggerTypeEnum;
@@ -173,14 +176,14 @@ public class JobTriggerPoolHelper {
      * 添加任务触发请求到线程池
      * 根据任务的超时情况选择合适的线程池执行
      *
-     * @param jobInfo                 任务
+     * @param jobId                 任务
      * @param triggerType           触发类型
      * @param failRetryCount        失败重试次数
      * @param executorShardingParam 分片参数
      * @param executorParam         执行参数
      * @param addressList           执行器地址列表
      */
-    public void addTriggerSharding(final XxlJobInfo jobInfo,
+    public void addTriggerSharding(final Long jobId,
                            final TriggerTypeEnum triggerType,
                            final int failRetryCount,
                            final String executorShardingParam,
@@ -189,7 +192,7 @@ public class JobTriggerPoolHelper {
 
         // 根据任务超时情况选择线程池
         ThreadPoolExecutor triggerPool_ = fastTriggerPool;
-        AtomicInteger jobTimeoutCount = jobTimeoutCountMap.get(jobInfo.getId());
+        AtomicInteger jobTimeoutCount = jobTimeoutCountMap.get(jobId);
         if (jobTimeoutCount!=null && jobTimeoutCount.get() > 10) {      // 任务超时次数>10，使用慢速线程池
             triggerPool_ = slowTriggerPool;
         }
@@ -201,7 +204,7 @@ public class JobTriggerPoolHelper {
                 long start = System.currentTimeMillis();
                 try {
                     // 触发任务执行
-                    XxlJobTrigger.triggerSharding(jobInfo, triggerType, failRetryCount, executorShardingParam, executorParam, addressList);
+                    XxlJobTrigger.triggerSharding(jobId, triggerType, failRetryCount, executorShardingParam, executorParam, addressList);
                 } catch (Throwable e) {
                     logger.error(e.getMessage(), e);
                 } finally {
@@ -215,7 +218,7 @@ public class JobTriggerPoolHelper {
                     // 检查任务执行时间是否超过500ms，超过则增加超时计数
                     long cost = System.currentTimeMillis()-start;
                     if (cost > 500) {
-                        AtomicInteger timeoutCount = jobTimeoutCountMap.putIfAbsent(jobInfo.getId(), new AtomicInteger(1));
+                        AtomicInteger timeoutCount = jobTimeoutCountMap.putIfAbsent(jobId, new AtomicInteger(1));
                         if (timeoutCount != null) {
                             timeoutCount.incrementAndGet();
                         }
@@ -224,7 +227,7 @@ public class JobTriggerPoolHelper {
             }
             @Override
             public String toString() {
-                return "Job Runnable, jobId:"+jobInfo.getId();
+                return "Job Runnable, jobId:"+jobId;
             }
         });
     }
@@ -254,8 +257,9 @@ public class JobTriggerPoolHelper {
      * 添加任务触发请求的静态方法
      * 通过单例实例调用addTrigger方法
      */
-    public static void triggerSharding(XxlJobInfo jobInfo, TriggerTypeEnum triggerType, int failRetryCount, String executorShardingParam, String executorParam, String addressList) {
-        helper.addTriggerSharding(jobInfo, triggerType, failRetryCount, executorShardingParam, executorParam, addressList);
+    public static void triggerSharding(Long jobId, TriggerTypeEnum triggerType, int failRetryCount, String executorShardingParam, String executorParam, String addressList) {
+
+        helper.addTriggerSharding(jobId, triggerType, failRetryCount, executorShardingParam, executorParam, addressList);
     }
 
     /**

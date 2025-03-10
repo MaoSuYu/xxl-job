@@ -72,6 +72,20 @@ public class XxlJobInfo {
 	 */
 	private String schedulingCycle;
 
+	/**
+	 * 优先级  越低优先级越高
+	 * @return
+	 */
+	private int priority;
+
+	public int getPriority() {
+		return priority;
+	}
+
+	public void setPriority(int priority) {
+		this.priority = priority;
+	}
+
 	public int getSchedulingInterval() {
 		return schedulingInterval;
 	}
