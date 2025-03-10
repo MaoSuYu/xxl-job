@@ -37,4 +37,11 @@ public class PriorityQueueTest {
         }
     }
 
+    @Test
+    @DisplayName("获取任务")
+    public void test3() {
+        Task nextTask = taskService.getNextTask();
+        System.err.println(nextTask);
+    }
+
 }

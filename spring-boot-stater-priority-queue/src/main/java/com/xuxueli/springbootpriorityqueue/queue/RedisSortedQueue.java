@@ -19,6 +19,7 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * 基于Redis的分布式有序队列实现
  * 可以直接指定元素的score，分数越小越靠前
+ * 支持FIFO模式，此时score参数将被忽略，完全按照入队顺序排序
  */
 public class RedisSortedQueue<T> {
     private static final Logger logger = LoggerFactory.getLogger(RedisSortedQueue.class);
@@ -30,6 +31,7 @@ public class RedisSortedQueue<T> {
     private final String queueKey;
     private final ObjectMapper objectMapper;
     private final Class<T> clazz;
+    private final boolean fifoMode;  // 是否为FIFO模式
     
     // Lua脚本，用于原子地执行出队操作
     private static final String DEQUEUE_SCRIPT = 
@@ -57,29 +59,41 @@ public class RedisSortedQueue<T> {
     }
 
     /**
-     * 构造函数
+     * 构造函数 - 默认模式（基于score排序）
+     */
+    public RedisSortedQueue(RedisTemplate<String, Object> redisTemplate, String queueName, Class<T> clazz) {
+        this(redisTemplate, queueName, clazz, false);
+    }
+
+    /**
+     * 构造函数 - 可选FIFO模式
+     * 
      * @param redisTemplate Redis操作模板
      * @param queueName 队列名称
      * @param clazz 队列元素类型
+     * @param fifoMode 是否启用FIFO模式，为true时完全按照入队顺序排序，忽略score参数
      */
-    public RedisSortedQueue(RedisTemplate<String, Object> redisTemplate, String queueName, Class<T> clazz) {
+    public RedisSortedQueue(RedisTemplate<String, Object> redisTemplate, String queueName, Class<T> clazz, boolean fifoMode) {
         this.redisTemplate = redisTemplate;
         this.queueKey = "sorted_queue:" + queueName;
         this.objectMapper = new ObjectMapper();
         this.objectMapper.registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
         this.clazz = clazz;
+        this.fifoMode = fifoMode;
         
         this.dequeueScript = new DefaultRedisScript<>();
         this.dequeueScript.setScriptText(DEQUEUE_SCRIPT);
         this.dequeueScript.setResultType(String.class);
         
-        logger.info("创建有序队列: {}", this.queueKey);
+        logger.info("创建有序队列: {}, FIFO模式: {}", this.queueKey, this.fifoMode);
     }
 
     /**
      * 将元素添加到队列中
+     * 在FIFO模式下，score参数将被忽略，完全按照入队顺序排序
+     * 
      * @param item 要添加的元素
-     * @param score 分数值，分数越小排名越靠前
+     * @param score 分数值（在FIFO模式下会被忽略）
      * @return 添加是否成功
      */
     public boolean enqueue(T item, double score) {
@@ -89,11 +103,21 @@ public class RedisSortedQueue<T> {
                 // 序列化对象
                 String itemJson = objectMapper.writeValueAsString(item);
                 
-                // 使用原子序列号作为微小增量，确保高并发下分数唯一
-                long sequence = SEQUENCE.getAndIncrement() % 1000000;
-                double uniqueScore = score + (sequence / 1000000000.0);
+                // 在FIFO模式下，使用时间戳作为score，确保先进先出
+                double finalScore;
+                if (fifoMode) {
+                    // 使用纳秒级时间戳作为基础分数
+                    long timestamp = System.nanoTime();
+                    // 添加序列号作为微小增量，确保严格的顺序性
+                    long sequence = SEQUENCE.getAndIncrement();
+                    finalScore = timestamp + (sequence / 1000000.0);  // 将序列号转换为小数部分
+                } else {
+                    // 原有的score计算逻辑
+                    long sequence = SEQUENCE.getAndIncrement() % 1000000;
+                    finalScore = score + (sequence / 1000000000.0);
+                }
                 
-                logger.debug("添加元素到队列，分数: {}, 唯一分数: {}", score, uniqueScore);
+                logger.debug("添加元素到队列，FIFO模式: {}, 原始分数: {}, 最终分数: {}", fifoMode, score, finalScore);
                 
                 // 使用Redis事务确保操作完整性
                 Boolean result = redisTemplate.execute(new SessionCallback<Boolean>() {
@@ -102,7 +126,7 @@ public class RedisSortedQueue<T> {
                     public Boolean execute(RedisOperations operations) throws DataAccessException {
                         try {
                             operations.multi();
-                            operations.opsForZSet().add(queueKey, itemJson, uniqueScore);
+                            operations.opsForZSet().add(queueKey, itemJson, finalScore);
                             return operations.exec() != null;
                         } catch (Exception e) {
                             logger.error("Redis事务执行失败", e);
@@ -112,7 +136,7 @@ public class RedisSortedQueue<T> {
                 });
                 
                 if (result != null && result) {
-                    logger.debug("添加元素成功，分数: {}", uniqueScore);
+                    logger.debug("添加元素成功，最终分数: {}", finalScore);
                     return true;
                 } else {
                     logger.warn("添加元素失败，等待{}ms后重试, 当前尝试次数: {}/{}", 
@@ -413,30 +437,30 @@ public class RedisSortedQueue<T> {
     
     /**
      * 更新元素的分数
+     * 在FIFO模式下，此操作将被忽略，返回false
+     * 
      * @param item 要更新的元素
      * @param score 新的分数
      * @return 更新是否成功
      */
     public boolean updateScore(T item, double score) {
+        if (fifoMode) {
+            logger.warn("FIFO模式下不支持更新分数操作");
+            return false;
+        }
+        
+        // 原有的updateScore逻辑
         for (int attempt = 0; attempt < MAX_RETRY; attempt++) {
             try {
-                // 序列化对象
                 String itemJson = objectMapper.writeValueAsString(item);
-                
-                // 使用原子序列号作为微小增量，确保高并发下分数唯一
                 long sequence = SEQUENCE.getAndIncrement() % 1000000;
                 double uniqueScore = score + (sequence / 1000000000.0);
                 
                 logger.debug("尝试更新元素分数为: {}", uniqueScore);
                 
-                // 检查元素是否存在
                 Double oldScore = redisTemplate.opsForZSet().score(queueKey, itemJson);
-                
-                // 更新元素分数
                 Boolean result = redisTemplate.opsForZSet().add(queueKey, itemJson, uniqueScore);
                 
-                // 如果元素不存在，则result为true表示添加成功
-                // 如果元素已存在，则result为false，但分数可能已经更新
                 if ((result != null && result) || oldScore != null) {
                     logger.debug("更新元素分数成功，新分数: {}", uniqueScore);
                     return true;
