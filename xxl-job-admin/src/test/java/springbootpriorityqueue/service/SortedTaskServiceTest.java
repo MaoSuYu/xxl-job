@@ -41,18 +41,7 @@ public class SortedTaskServiceTest {
     
     private SortedTaskService taskService;
     
-    /**
-     * 在每个测试方法执行前设置测试环境
-     * 创建一个新的排序任务服务并清空已有任务
-     */
-    @BeforeEach
-    public void setup() {
-        System.out.println("========== 开始测试排序任务服务 ==========");
-        taskService = new SortedTaskService(queueFactory);
-        taskService.clearTasks();
-        System.out.println("已创建排序任务服务并清空任务队列");
-    }
-    
+
     /**
      * 在每个测试方法执行后清理测试环境
      */
