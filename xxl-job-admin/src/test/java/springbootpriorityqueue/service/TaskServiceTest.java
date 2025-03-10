@@ -35,7 +35,8 @@ public class TaskServiceTest {
     
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
-    
+
+    @Autowired
     private TaskService taskService;
     
     /**
@@ -45,7 +46,6 @@ public class TaskServiceTest {
     @BeforeEach
     public void setup() {
         System.out.println("========== 开始测试任务服务 ==========");
-        taskService = new TaskService(queueFactory);
         taskService.clearTasks();
         System.out.println("已创建任务服务并清空任务队列");
     }
