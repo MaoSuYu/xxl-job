@@ -9,9 +9,14 @@ use
 SET NAMES utf8mb4;
 CREATE TABLE `xxl_job_sharding_info`
 (
-    `id`            bigint(20) NOT NULL COMMENT '分片子任务id',
-    `parent_job_id` bigint(20) NOT NULL COMMENT '父任务id',
-    `params`        varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '参数（子任务的时间参数）',
+    `id`             bigint(20) NOT NULL COMMENT '分片子任务id',
+    `parent_job_id`  bigint(20) NOT NULL COMMENT '父任务id',
+    `params`         varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '参数（子任务的时间参数）',
+    `trigger_time`   datetime                                DEFAULT NULL COMMENT '更新时间',
+    `execute_batch`  int(11)                                 DEFAULT NULL COMMENT '执行批次',
+    `delete_falg`    int(2)                                  DEFAULT '0' COMMENT '删除标记',
+    `execute_state`  int(2)                                  DEFAULT '0' COMMENT '执行状态0未执行1执行成功2执行失败',
+    `execute_number` int(11)                                 DEFAULT '0' COMMENT '执行次数',
     PRIMARY KEY (`id`)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
@@ -50,11 +55,12 @@ CREATE TABLE `xxl_job_info`
   DEFAULT CHARSET = utf8mb4;
 
 ALTER TABLE `xxl_job_info`
-    ADD COLUMN `sharding_job_ids` varchar(255) DEFAULT NULL COMMENT '分片任务ids，以逗号连接',
     ADD COLUMN `first_scheduling_time` datetime DEFAULT NULL COMMENT '首次调度时间',
     ADD COLUMN `scheduling_dead_line` datetime DEFAULT NULL COMMENT '截止调度时间',
-    ADD COLUMN `data_interval` int(11) DEFAULT NULL COMMENT '调度间隔',
-    ADD COLUMN `time_unit` varchar(50) DEFAULT NULL COMMENT '调度时间单位MINUTE, HOUR, DAY, WEEK, MONTH';
+    ADD COLUMN `data_interval` int(11) DEFAULT NULL COMMENT '数据间隔',
+    ADD COLUMN `time_unit` varchar(50) DEFAULT NULL COMMENT '数据时间单位MINUTE, HOUR, DAY, WEEK, MONTH',
+    ADD COLUMN `scheduling_interval` int(11) DEFAULT NULL COMMENT '调度间隔',
+    ADD COLUMN `scheduling_cycle` varchar(50) DEFAULT NULL COMMENT '调度时间单位MINUTE, HOUR, DAY, WEEK, MONTH';
 
 CREATE TABLE `xxl_job_log`
 (

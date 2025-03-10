@@ -17,8 +17,13 @@ public interface XxlJobShardingInfoDao {
 
     int bathSave(@Param("list") List<XxlJobShardingInfo> xxlJobShardingInfos);
 
-    int deleteByParentId(@Param("id") Long id);
+    int logicDeleteByParentId(@Param("id") Long id);
 
-    List<XxlJobShardingInfo> findListByIds(@Param("ids") List<String> shardingJobIds);
+    List<XxlJobShardingInfo> findListByParentJobId(@Param("id") Long id);
 
+    int findMaxExecuteBatch(@Param("parentJobId") Long id);
+
+    int updateExecuteInfo(@Param("state") int state,@Param("id") Long id);
+
+    //int updateTriggerInfo(@Param("state") int state,@Param("id") Long id);
 }

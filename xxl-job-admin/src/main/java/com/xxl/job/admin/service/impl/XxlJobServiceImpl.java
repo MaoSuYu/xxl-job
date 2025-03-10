@@ -16,6 +16,7 @@ import com.xxl.job.admin.dao.*;
 import com.xxl.job.admin.service.XxlJobService;
 import com.xxl.job.core.biz.model.HandleShardingParam;
 import com.xxl.job.core.biz.model.ReturnT;
+import com.xxl.job.core.enums.ExecutionStatus;
 import com.xxl.job.core.enums.ExecutorBlockStrategyEnum;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ObjectUtils;
@@ -413,102 +414,126 @@ public class XxlJobServiceImpl implements XxlJobService {
 	@Override
 	@Transactional
 	public ReturnT<String> ShardingTrigger(HandleShardingParam handleShardingParam) {
-		//调度周期
-		TimeUnit schedulingCycle = handleShardingParam.getSchedulingCycle();
-		//调度间隔
-		int schedulingInterval = handleShardingParam.getSchedulingInterval();
-		// 调度的首次时间
-		String firstSchedulingTime = handleShardingParam.getFirstSchedulingTime();
-		// 调度的截止时间
-		String schedulingDeadline = handleShardingParam.getSchedulingDeadline();
-		// 数据的开始时间
-		String startTimeOfData = handleShardingParam.getStartTimeOfData();
-		// 数据的截止时间
-		String endTimeOfData = handleShardingParam.getEndTimeOfData();
-		// 数据时间间隔
-		int dataInterval = handleShardingParam.getDataInterval();
-		// 时间单位
-		TimeUnit timeUnit = handleShardingParam.getTimeUnit();
-		// 执行方法
-		String executeHandle = handleShardingParam.getExecuteHandle();
-		// 执行器服务名称
-		String appName = handleShardingParam.getAppName();
-		XxlJobGroup xxlJobGroup = XxlJobAdminConfig.getAdminConfig().getXxlJobGroupDao().loadByAppName(appName);
-		if (ObjectUtils.isEmpty(xxlJobGroup)){
-			logger.error(appName+"不存在该执行器！");
-			throw new IllegalArgumentException(appName+"不存在该执行器！");
+		// 1. 参数校验
+		validateParams(handleShardingParam);
+
+		// 2. 获取执行器信息
+		XxlJobGroup xxlJobGroup = getXxlJobGroup(handleShardingParam.getAppName());
+		if (xxlJobGroup == null) {
+			logger.error("执行器 {} 不存在！", handleShardingParam.getAppName());
+			throw new IllegalArgumentException("执行器 " + handleShardingParam.getAppName() + " 不存在！");
 		}
-		Long id = handleShardingParam.getId();
 
-		int isAutomatic = handleShardingParam.getIsAutomatic();
-		// 生成的任务先存数据库
-		// 然后生成的子任务也存数据库只需要有个任务关联就行，
-		// 根据任务参数执行
+		// 3. 解析时间范围
+		List<TimeRange> timeRanges = TimeRangeSplitterUtils.splitTimeRange(
+				handleShardingParam.getStartTimeOfData(),
+				handleShardingParam.getEndTimeOfData(),
+				handleShardingParam.getDataInterval(),
+				handleShardingParam.getTimeUnit().name()
+		);
 
-		// 定义时间间隔（单位：分钟、小时、天、月、年）
-		// 生成cron表达式
-		//String cron = CronExpressionGeneratorUtil.generateCronExpression(schedulingInterval, schedulingCycle, firstSchedulingTime, schedulingDeadline);
+		// 4. 构建父任务信息
+		XxlJobInfo xxlJobInfo = buildXxlJobInfo(handleShardingParam, xxlJobGroup);
 
-		// 分片思想
-		// 拆分时间范围
-		List<TimeRange> timeRanges = TimeRangeSplitterUtils.splitTimeRange(startTimeOfData, endTimeOfData, dataInterval, ChronoUnit.MINUTES);
+		// 5. 构建子任务信息
+		List<XxlJobShardingInfo> xxlJobShardingInfos = buildXxlJobShardingInfos(
+				handleShardingParam,
+				timeRanges,
+				xxlJobInfo.getId()
+		);
 
+		// 6. 保存任务信息
+		saveTaskInfo(xxlJobInfo, xxlJobShardingInfos);
+
+		// 7. 触发任务
+		triggerTask(xxlJobInfo, handleShardingParam.getIsAutomatic());
+
+		return ReturnT.SUCCESS;
+	}
+
+	// 参数校验
+	private void validateParams(HandleShardingParam handleShardingParam) {
+		if (handleShardingParam == null) {
+			throw new IllegalArgumentException("任务参数不能为空！");
+		}
+		// 其他参数校验逻辑
+	}
+
+	// 获取执行器信息
+	private XxlJobGroup getXxlJobGroup(String appName) {
+		return XxlJobAdminConfig.getAdminConfig().getXxlJobGroupDao().loadByAppName(appName);
+	}
+
+	// 构建父任务信息
+	private XxlJobInfo buildXxlJobInfo(HandleShardingParam handleShardingParam, XxlJobGroup xxlJobGroup) {
 		XxlJobInfo xxlJobInfo = new XxlJobInfo();
-		xxlJobInfo.setId(id);
+		xxlJobInfo.setId(handleShardingParam.getId());
 		xxlJobInfo.setJobGroup(xxlJobGroup.getId());
 		xxlJobInfo.setAddTime(new Date());
 		xxlJobInfo.setUpdateTime(new Date());
 		xxlJobInfo.setJobDesc("同步任务");
-		xxlJobInfo.setScheduleType("PERIOD");
-		//xxlJobInfo.setScheduleConf(cron);
-		xxlJobInfo.setMisfireStrategy("DO_NOTHING");
+		xxlJobInfo.setScheduleType(ScheduleTypeEnum.PERIOD.name());
+		xxlJobInfo.setMisfireStrategy(MisfireStrategyEnum.DO_NOTHING.name());
 		xxlJobInfo.setExecutorRouteStrategy(ExecutorRouteStrategyEnum.FIRST.name());
-		xxlJobInfo.setExecutorHandler("demoJobHandler");
-		xxlJobInfo.setExecutorParam(JSONUtil.toJsonStr(new TimeRange(startTimeOfData,endTimeOfData)));
+		xxlJobInfo.setExecutorHandler("demoJobHandler");// 先写死
+		xxlJobInfo.setExecutorParam(JSONUtil.toJsonStr(new TimeRange(
+				handleShardingParam.getStartTimeOfData(),
+				handleShardingParam.getEndTimeOfData()
+		)));
 		xxlJobInfo.setExecutorBlockStrategy(ExecutorBlockStrategyEnum.SERIAL_EXECUTION.name());
 		xxlJobInfo.setGlueType(GlueTypeEnum.BEAN.getDesc());
 		xxlJobInfo.setGlueUpdatetime(new Date());
-		xxlJobInfo.setFirstSchedulingTime(firstSchedulingTime);
-		xxlJobInfo.setSchedulingDeadline(schedulingDeadline);
-		/// 直接保存下一次的执行时间戳
-		xxlJobInfo.setTriggerNextTime(TimeConverterUtil.convertToTimestamp(firstSchedulingTime));
-		//xxlJobInfo.setTriggerNextTime(System.currentTimeMillis()+6000);
-		xxlJobInfo.setTimeUnit("MINUTE");
-		xxlJobInfo.setDataInterval(dataInterval);
+		xxlJobInfo.setFirstSchedulingTime(handleShardingParam.getFirstSchedulingTime());
+		xxlJobInfo.setSchedulingDeadline(handleShardingParam.getSchedulingDeadline());
+		xxlJobInfo.setTriggerNextTime(TimeConverterUtil.convertToTimestamp(handleShardingParam.getFirstSchedulingTime()));
+		xxlJobInfo.setTimeUnit(handleShardingParam.getTimeUnit().name());
+		xxlJobInfo.setDataInterval(handleShardingParam.getDataInterval());
+		xxlJobInfo.setSchedulingInterval(handleShardingParam.getSchedulingInterval());
+		xxlJobInfo.setSchedulingCycle(handleShardingParam.getSchedulingCycle().name());
+		xxlJobInfo.setTriggerStatus(handleShardingParam.getIsAutomatic() == 1 ? 1 : 0);
+		return xxlJobInfo;
+	}
 
+	// 构建子任务信息
+	private List<XxlJobShardingInfo> buildXxlJobShardingInfos(
+			HandleShardingParam handleShardingParam,
+			List<TimeRange> timeRanges,
+			Long parentJobId
+	) {
+		int maxExecuteBatch = XxlJobAdminConfig.getAdminConfig().getXxlJobShardingInfoDao().findMaxExecuteBatch(parentJobId);
 		List<XxlJobShardingInfo> xxlJobShardingInfos = new ArrayList<>();
-		StringJoiner joiner = new StringJoiner(",");
+
 		for (TimeRange timeRange : timeRanges) {
-
-			// 雪花算法生成id
-			long snowflakeNextId = IdUtil.getSnowflakeNextId();
-			joiner.add(String.valueOf(snowflakeNextId));
-
-			String param = JSONUtil.toJsonStr(timeRange);
-
-			// 记录子任务信息
 			XxlJobShardingInfo xxlJobShardingInfo = new XxlJobShardingInfo();
-			xxlJobShardingInfo.setId(snowflakeNextId);
-			xxlJobShardingInfo.setParams(param);
-			xxlJobShardingInfo.setParentJobId(id);
+			xxlJobShardingInfo.setId(IdUtil.getSnowflakeNextId());
+			xxlJobShardingInfo.setParams(JSONUtil.toJsonStr(timeRange));
+			xxlJobShardingInfo.setParentJobId(parentJobId);
+			xxlJobShardingInfo.setTriggerTime(handleShardingParam.getIsAutomatic() == 1
+					? DateUtil.parseDateTime(handleShardingParam.getFirstSchedulingTime())
+					: new Date());
+			xxlJobShardingInfo.setExecuteBatch(maxExecuteBatch + 1);
+			xxlJobShardingInfo.setExecuteState(ExecutionStatus.NOT_EXECUTED.getCode());
 			xxlJobShardingInfos.add(xxlJobShardingInfo);
 		}
-		xxlJobInfo.setShardingJobIds(joiner.toString());
-		if (!ObjectUtils.isEmpty(isAutomatic) && isAutomatic == 1) {
-			xxlJobInfo.setTriggerStatus(1);
-		}
-		// 先删后加父任务
-		XxlJobAdminConfig.getAdminConfig().getXxlJobInfoDao().delete(id);
+		return xxlJobShardingInfos;
+	}
+
+	// 保存任务信息
+	private void saveTaskInfo(XxlJobInfo xxlJobInfo, List<XxlJobShardingInfo> xxlJobShardingInfos) {
+		XxlJobAdminConfig.getAdminConfig().getXxlJobInfoDao().delete(xxlJobInfo.getId());
 		XxlJobAdminConfig.getAdminConfig().getXxlJobInfoDao().save(xxlJobInfo);
-		// 先删后添加子任务
-		XxlJobAdminConfig.getAdminConfig().getXxlJobShardingInfoDao().deleteByParentId(id);
+
+		XxlJobAdminConfig.getAdminConfig().getXxlJobShardingInfoDao().logicDeleteByParentId(xxlJobInfo.getId());
 		XxlJobAdminConfig.getAdminConfig().getXxlJobShardingInfoDao().bathSave(xxlJobShardingInfos);
-		// 自动触发即按照首次时间触发，否则执行一次
-		if (ObjectUtils.isEmpty(isAutomatic)||isAutomatic != 1) {
+	}
+
+	// 触发任务
+	private void triggerTask(XxlJobInfo xxlJobInfo, Integer isAutomatic) {
+		if (isAutomatic == null || isAutomatic != 1) {
 			JobTriggerPoolHelper.triggerSharding(xxlJobInfo, TriggerTypeEnum.MANUAL, -1, null, null, null);
 		}
-		return ReturnT.SUCCESS;
 	}
+
 
 	private boolean hasPermission(XxlJobUser loginUser, int jobGroup){
 		if (loginUser.getRole() == 1) {

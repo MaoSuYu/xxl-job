@@ -7,30 +7,45 @@
         INSERT INTO xxl_job_sharding_info (
                 id,
                 parent_job_id,
-                params
+                params,
+                trigger_time
                 ) VALUES (
                                  #{id},
                                  #{parentJobId},
-                                 #{params}
+                                 #{params},
+                                 #{triggerTime}
                                  );
     </insert>
 
     <insert id="bathSave" parameterType="java.util.List">
-        INSERT INTO xxl_job_sharding_info (id, parent_job_id, params)
+        INSERT INTO xxl_job_sharding_info (id, parent_job_id, params,trigger_time,execute_batch)
         VALUES
         <foreach collection="list" item="item" separator=",">
-            (#{item.id}, #{item.parentJobId}, #{item.params})
+            (#{item.id}, #{item.parentJobId}, #{item.params}, #{item.triggerTime},#{item.executeBatch})
         </foreach>
     </insert>
 
-    <delete id="deleteByParentId">
-        delete from xxl_job_sharding_info where parent_job_id = #{id}
+    <delete id="logicDeleteByParentId">
+        UPDATE xxl_job_sharding_info
+        SET  delete_flag= 1
+        WHERE parent_job_id = #{id};
     </delete>
 
-    <select id="findListByIds" resultType="com.xxl.job.admin.core.model.XxlJobShardingInfo">
-        select id,params from xxl_job_sharding_info where id in
-        <foreach collection="ids" item="id" open="(" separator="," close=")">
-            #{id}
-        </foreach>
+    <select id="findListByParentJobId" resultType="com.xxl.job.admin.core.model.XxlJobShardingInfo">
+        select xjsi.id,xjsi.params from xxl_job_sharding_info xjsi
+        left join xxl_job_info xji on xjsi.parent_job_id = xji.id
+        where xjsi.delete_flag = 0
     </select>
+
+    <select id="findMaxExecuteBatch" resultType="int">
+        SELECT IFNULL(MAX(execute_batch), 0) FROM xxl_job_sharding_info where delete_flag = 0 and parent_job_id = #{parentJobId}
+    </select>
+
+    <update id="updateExecuteInfo">
+        update xxl_job_sharding_info set execute_state =#{state}, execute_number = execute_number + 1 where id = #{id}
+    </update>
+
+<!--    <update id="updateTriggerInfo">-->
+<!--        update xxl_job_sharding_info set execute_state =#{state} ,  execute_number = execute_number + 1 where id = #{id}-->
+<!--    </update>-->
 </mapper>
