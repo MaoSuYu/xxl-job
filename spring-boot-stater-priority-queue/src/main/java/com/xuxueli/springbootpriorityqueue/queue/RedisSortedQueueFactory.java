@@ -42,7 +42,7 @@ public class RedisSortedQueueFactory {
                 queue = queueCache.get(cacheKey);
                 if (queue == null) {
                     logger.info("创建新的Redis有序队列实例: {}", cacheKey);
-                    queue = new RedisSortedQueue<>(redisTemplate, queueName, clazz);
+                    queue = new RedisSortedQueue<>(redisTemplate, queueName, clazz, true);
                     queueCache.put(cacheKey, queue);
                 }
             } finally {
