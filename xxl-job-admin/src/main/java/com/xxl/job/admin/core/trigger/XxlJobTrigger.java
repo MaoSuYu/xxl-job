@@ -157,13 +157,13 @@ public class XxlJobTrigger {
                 && group.getRegistryList()!=null && !group.getRegistryList().isEmpty()
                 && shardingParam==null) {
             for (int i = 0; i < group.getRegistryList().size(); i++) {
-                processTrigger(group, jobInfo, finalFailRetryCount, triggerType, i, group.getRegistryList().size());
+                processTriggerSharding(group, jobInfo, finalFailRetryCount, triggerType, i, group.getRegistryList().size());
             }
         } else {
             if (shardingParam == null) {
                 shardingParam = new int[]{0, 1};
             }
-            processTrigger(group, jobInfo, finalFailRetryCount, triggerType, shardingParam[0], shardingParam[1]);
+            processTriggerSharding(group, jobInfo, finalFailRetryCount, triggerType, shardingParam[0], shardingParam[1]);
         }
 
     }
@@ -293,21 +293,23 @@ public class XxlJobTrigger {
         String shardingParam = (ExecutorRouteStrategyEnum.SHARDING_BROADCAST==executorRouteStrategyEnum)?String.valueOf(index).concat("/").concat(String.valueOf(total)):null;
 
         String shardingJobIdStr = jobInfo.getShardingJobIds();
-        List<String> shardingJobIds = StrUtil.split(shardingJobIdStr, ',', true, true);
-        List<XxlJobShardingInfo> listByIds = XxlJobAdminConfig.getAdminConfig().getXxlJobShardingInfoDao().findListByIds(shardingJobIds);
-        List<XxlJobInfo> ShardingInfos = new ArrayList<>();
-        for (XxlJobShardingInfo shardingInfo : listByIds) {
-            XxlJobInfo xxlJobInfo = new XxlJobInfo();
-            BeanUtils.copyProperties(jobInfo,xxlJobInfo);
+        if (StrUtil.isNotBlank(shardingJobIdStr)) {
+            List<String> shardingJobIds = StrUtil.split(shardingJobIdStr, ',', true, true);
+            List<XxlJobShardingInfo> listByIds = XxlJobAdminConfig.getAdminConfig().getXxlJobShardingInfoDao().findListByIds(shardingJobIds);
+            List<XxlJobInfo> ShardingInfos = new ArrayList<>();
+            for (XxlJobShardingInfo shardingInfo : listByIds) {
+                XxlJobInfo xxlJobInfo = new XxlJobInfo();
+                BeanUtils.copyProperties(jobInfo, xxlJobInfo);
 
-            xxlJobInfo.setId(shardingInfo.getId());
-            xxlJobInfo.setExecutorParam(shardingInfo.getParams());
-            ShardingInfos.add(xxlJobInfo);
-        }
+                xxlJobInfo.setId(shardingInfo.getId());
+                xxlJobInfo.setExecutorParam(shardingInfo.getParams());
+                ShardingInfos.add(xxlJobInfo);
+            }
 
-        // 循环执行任务
-        for (XxlJobInfo shardingInfo : ShardingInfos) {
-            triggerJobInfo(group, shardingInfo, finalFailRetryCount, triggerType, index, total, blockStrategy, executorRouteStrategyEnum, shardingParam);
+            // 循环执行任务
+            for (XxlJobInfo shardingInfo : ShardingInfos) {
+                triggerJobInfo(group, shardingInfo, finalFailRetryCount, triggerType, index, total, blockStrategy, executorRouteStrategyEnum, shardingParam);
+            }
         }
     }
 
