@@ -87,6 +87,9 @@ public class XxlJobScheduler  {
 
         // 停止任务触发线程池
         JobTriggerPoolHelper.toStop();
+
+        // 销毁
+        TaskQueueHelper.getInstance().toStop();
     }
 
     /**

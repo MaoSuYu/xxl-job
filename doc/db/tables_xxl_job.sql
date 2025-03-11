@@ -14,7 +14,7 @@ CREATE TABLE `xxl_job_sharding_info`
     `params`         varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '参数（子任务的时间参数）',
     `trigger_time`   datetime                                DEFAULT NULL COMMENT '更新时间',
     `execute_batch`  int(11)                                 DEFAULT NULL COMMENT '执行批次',
-    `delete_falg`    int(2)                                  DEFAULT '0' COMMENT '删除标记',
+    `delete_flag`    int(2)                                  DEFAULT '0' COMMENT '删除标记',
     `execute_state`  int(2)                                  DEFAULT '0' COMMENT '执行状态0未执行1执行成功2执行失败',
     `execute_number` int(11)                                 DEFAULT '0' COMMENT '执行次数',
     PRIMARY KEY (`id`)

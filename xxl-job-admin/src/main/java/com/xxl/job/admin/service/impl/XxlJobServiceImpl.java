@@ -502,6 +502,7 @@ public class XxlJobServiceImpl implements XxlJobService {
 		xxlJobInfo.setSchedulingInterval(handleShardingParam.getSchedulingInterval());
 		xxlJobInfo.setSchedulingCycle(handleShardingParam.getSchedulingCycle().name());
 		xxlJobInfo.setTriggerStatus(handleShardingParam.getIsAutomatic() == 1 ? 1 : 0);
+		xxlJobInfo.setPriority(handleShardingParam.getPriority());
 		return xxlJobInfo;
 	}
 
@@ -541,11 +542,12 @@ public class XxlJobServiceImpl implements XxlJobService {
 	// 触发任务
 	private void triggerTask(XxlJobInfo xxlJobInfo, Integer isAutomatic) {
 		if (isAutomatic == null || isAutomatic != 1) {
-			sortedTaskService.addTask(new SortedTask(xxlJobInfo.getId().toString(),xxlJobInfo.getJobDesc(),xxlJobInfo.getJobDesc(),xxlJobInfo.getPriority()));
+			sortedTaskService.addTask(new SortedTask(xxlJobInfo.getId().toString(),xxlJobInfo.getJobDesc(),xxlJobInfo.getJobDesc(),0));
 			//JobTriggerPoolHelper.triggerSharding(id, TriggerTypeEnum.MANUAL, -1, null, null, null);
-		} else {
-			taskService.addTask(new Task(xxlJobInfo.getId().toString(),xxlJobInfo.getJobDesc(),xxlJobInfo.getJobDesc()),xxlJobInfo.getPriority());
 		}
+//		else {
+//			taskService.addTask(new Task(xxlJobInfo.getId().toString(),xxlJobInfo.getJobDesc(),xxlJobInfo.getJobDesc()),xxlJobInfo.getPriority());
+//		}
 	}
 
 

@@ -149,7 +149,8 @@
 		    first_scheduling_time,
 		    scheduling_dead_line,
 		    data_interval,
-		    time_unit
+		    time_unit,
+		    priority
 		) VALUES (
 		    #{id},
 			#{jobGroup},
@@ -178,7 +179,8 @@
 		    #{firstSchedulingTime},
 		    #{schedulingDeadline},
 		    #{dataInterval},
-		    #{timeUnit}
+		    #{timeUnit},
+			#{priority}
 		);
 		<!--<selectKey resultType="java.lang.Integer" order="AFTER" keyProperty="id">
 			SELECT LAST_INSERT_ID()

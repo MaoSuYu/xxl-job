@@ -229,6 +229,7 @@ public class JobScheduleHelper {
                     try {
                         // 获取当前秒对应的待触发任务
                         List<Long> ringItemData = new ArrayList<>();
+                        System.err.println(ringItemData.size());
                         int nowSecond = Calendar.getInstance().get(Calendar.SECOND);
                         // 避免处理耗时过长跨过刻度，额外检查前一个刻度的任务
                         for (int i = 0; i < 2; i++) {
