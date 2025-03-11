@@ -203,9 +203,13 @@ public class RedisPriorityQueueFactoryTest {
     }
 
     @Test
-    public void wew() {
-        RedisPriorityQueue<String> taskQueue = factory.getQueue("symao", String.class);
-        taskQueue.enqueue("symaohello1",1);
+    public void wew() throws InterruptedException {
+        RedisPriorityQueue<String> taskQueue = factory.getQueue("test", String.class);
+        for (int i = 200; i >= 1 ; i--) {
+            Thread.sleep(100);
+            taskQueue.enqueue("test"+i,1);
+        }
+
     }
 
 
