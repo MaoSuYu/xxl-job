@@ -559,7 +559,7 @@ public class XxlJobServiceImpl implements XxlJobService {
 		xxlJobInfo.setScheduleType(ScheduleTypeEnum.PERIOD.name());
 		xxlJobInfo.setMisfireStrategy(MisfireStrategyEnum.DO_NOTHING.name());
 		xxlJobInfo.setExecutorRouteStrategy(ExecutorRouteStrategyEnum.FIRST.name());
-		xxlJobInfo.setExecutorHandler("demoJobHandler");// 先写死
+		xxlJobInfo.setExecutorHandler(handleShardingParam.getExecuteHandle());
 		xxlJobInfo.setExecutorParam(JSONUtil.toJsonStr(new TimeRange(
 				handleShardingParam.getStartTimeOfData(),
 				handleShardingParam.getEndTimeOfData()
