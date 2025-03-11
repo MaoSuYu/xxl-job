@@ -192,21 +192,125 @@ public class XxlJobExecutor  {
      * 该方法用于主动将执行器从调度中心注销，
      * 在需要手动下线执行器时调用。
      * 
-     * 注意：这不会停止执行器进程，只会停止向调度中心发送心跳。
-     * 已经在运行的任务会继续执行直到完成。
+     * 执行流程：
+     * 1. 停止注册线程，不再向调度中心发送心跳
+     * 2. 等待所有运行中的任务完成
+     * 3. 清理相关资源
+     * 4. 启动守护线程监控任务完成情况，所有任务完成后自动停止程序
+     * 
+     * 注意：这不会立即停止执行器进程，会等待所有任务完成后再停止。
      */
     public void offline() {
-        logger.info(">>>>>>>>>>> xxl-job, 执行器主动离线开始");
-        try {
-            // 停止注册线程
-            if (embedServer != null) {
-                embedServer.stopRegistry();
-                logger.info(">>>>>>>>>>> xxl-job, 执行器注册线程已停止");
-            }
-        } catch (Exception e) {
-            logger.error(">>>>>>>>>>> xxl-job, 执行器离线失败", e);
+        logger.info("执行器开始离线");
+        
+        // 检查执行器状态
+        if (embedServer == null) {
+            logger.warn("执行器未启动或已离线");
+            return;
         }
-        logger.info(">>>>>>>>>>> xxl-job, 执行器主动离线完成");
+
+        try {
+            // 1. 获取当前运行中的任务数量
+            int runningTaskCount = getRunningTaskCount();
+            int pendingTaskCount = getPendingTaskCount();
+            if (runningTaskCount > 0 || pendingTaskCount > 0) {
+                logger.info("当前状态 -> 运行中任务: {}, 等待执行任务: {}", runningTaskCount, pendingTaskCount);
+            }
+
+            // 2. 停止注册线程
+            try {
+                embedServer.stopRegistry();
+                logger.info("注册线程已停止");
+            } catch (Exception e) {
+                logger.error("停止注册线程失败: {}", e.getMessage());
+                throw e;
+            }
+
+            // 3. 启动守护线程监控任务完成情况
+            Thread monitorThread = new Thread(() -> {
+                logger.info("任务监控线程启动");
+                try {
+                    int lastRunningCount = 0;
+                    int lastPendingCount = 0;
+                    
+                    while (true) {
+                        // 检查所有类型的任务
+                        boolean hasRunningTasks = false;
+                        StringBuilder taskInfo = new StringBuilder();
+                        
+                        // 检查jobThreadRepository中的任务
+                        if (jobThreadRepository.size() > 0) {
+                            for (Map.Entry<Long, JobThread> item : jobThreadRepository.entrySet()) {
+                                JobThread jobThread = item.getValue();
+                                if (jobThread != null && jobThread.isRunningOrHasQueue()) {
+                                    hasRunningTasks = true;
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        // 检查运行中和等待的任务数
+                        int currentRunningTasks = getRunningTaskCount();
+                        int currentPendingTasks = getPendingTaskCount();
+                        
+                        // 只在任务数量发生变化时输出日志
+                        if (currentRunningTasks > 0 || currentPendingTasks > 0) {
+                            if (currentRunningTasks != lastRunningCount || currentPendingTasks != lastPendingCount) {
+                                logger.info("任务状态 -> 运行中: {}, 等待执行: {}", currentRunningTasks, currentPendingTasks);
+                                lastRunningCount = currentRunningTasks;
+                                lastPendingCount = currentPendingTasks;
+                            }
+                            hasRunningTasks = true;
+                        }
+
+                        // 如果没有任何运行中的任务，则停止程序
+                        if (!hasRunningTasks) {
+                            logger.info("所有任务已完成，准备停止程序");
+                            
+                            try {
+                                // 停止所有组件
+                                destroy();
+                                
+                                // 使用一个新线程来停止程序，避免在当前线程中直接调用System.exit
+                                new Thread(() -> {
+                                    try {
+                                        Thread.sleep(3000); // 等待3秒，确保日志能够完整输出
+                                        logger.info("程序即将退出");
+                                        System.exit(0);
+                                    } catch (InterruptedException e) {
+                                        Thread.currentThread().interrupt();
+                                    }
+                                }, "xxl-job, shutdown-thread").start();
+                                
+                                break;
+                            } catch (Exception e) {
+                                logger.error("停止程序时发生异常: {}", e.getMessage());
+                            }
+                        }
+
+                        try {
+                            Thread.sleep(15000); // 每15秒检查一次
+                        } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
+                            break;
+                        }
+                    }
+                } catch (Exception e) {
+                    logger.error("任务监控线程异常: {}", e.getMessage());
+                }
+                logger.info("任务监控线程结束");
+            });
+            
+            // 设置为守护线程
+            monitorThread.setDaemon(true);
+            monitorThread.setName("xxl-job, offline-monitor-thread");
+            monitorThread.start();
+
+            logger.info("执行器已离线，等待任务执行完毕后将自动停止程序");
+        } catch (Exception e) {
+            logger.error("执行器离线过程发生异常: {}", e.getMessage());
+            throw e;
+        }
     }
 
     // ---------------------- admin-client (rpc invoker) ----------------------
