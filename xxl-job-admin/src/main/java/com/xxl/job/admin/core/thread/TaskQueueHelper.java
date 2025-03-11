@@ -55,25 +55,25 @@ public class TaskQueueHelper implements ApplicationRunner {
      */
     public void start() {
         // 启动普通任务执行线程
-        taskThread = new Thread(new Runnable() {
+        sortTaskThread = new Thread(new Runnable() {
             @Override
             public void run() {
                 SortedTaskService taskService = (SortedTaskService) SpringUtil.getBean("sortedTaskService");
-                while (!taskThreadToStop) {
+                while (!sortTaskThreadToStop) {
                     try {
                         // 先通过路由策略是否可以找到执行器，找到了再取队列的子任务执行
                         IdleThreadBasedTaskAllocator idleThreadBasedTaskAllocator = new IdleThreadBasedTaskAllocator();
                         XxlJobGroup xxlJobGroup = XxlJobAdminConfig.getAdminConfig().getXxlJobGroupDao().loadByAppName("vip-executor");
                         if (ObjectUtils.isEmpty(xxlJobGroup)|| StrUtil.isBlank(xxlJobGroup.getAddressList())){
-                            logger.error("执行器找不到！");
-                            return;
+                            TimeUnit.MILLISECONDS.sleep(100);
+                            continue;
                         }
                         List<String> list = Stream.of(xxlJobGroup.getAddressList().split(","))
                                 .collect(Collectors.toList());
                         ReturnT<String> routeAddressResult = idleThreadBasedTaskAllocator.route(new TriggerParam(), list);
                         if (routeAddressResult.getCode() != ReturnT.SUCCESS_CODE){
-                            logger.warn("执行路由线程路由未匹配资源");
-                            return;
+                            TimeUnit.MILLISECONDS.sleep(100);
+                            continue;
                         }
 
                         String address = routeAddressResult.getContent();
@@ -100,32 +100,30 @@ public class TaskQueueHelper implements ApplicationRunner {
                 logger.info(">>>>>>>>>>> task thread stop");
             }
         });
-        taskThread.setDaemon(true);
-        taskThread.setName("xxl-job, admin TaskQueueHelper#taskThread");
-        taskThread.start();
+        sortTaskThread.setDaemon(true);
+        sortTaskThread.setName("xxl-job, admin TaskQueueHelper#taskThread");
+        sortTaskThread.start();
 
         // 启动排序任务执行线程
-        sortTaskThread = new Thread(new Runnable() {
+        taskThread = new Thread(new Runnable() {
             @Override
             public void run() {
                 TaskService taskService = (TaskService) SpringUtil.getBean("taskService");
-                while (!sortTaskThreadToStop) {
+                while (!taskThreadToStop) {
                     try {
                         // 先通过路由策略是否可以找到执行器，找到了再取队列的子任务执行
                         IdleThreadBasedTaskAllocator idleThreadBasedTaskAllocator = new IdleThreadBasedTaskAllocator();
                         XxlJobGroup xxlJobGroup = XxlJobAdminConfig.getAdminConfig().getXxlJobGroupDao().loadByAppName("normal");
                         if (ObjectUtils.isEmpty(xxlJobGroup)|| StrUtil.isBlank(xxlJobGroup.getAddressList())){
-                            logger.error("执行器找不到！");
-                            System.err.println("执行器找不到！");
-                            return;
+                            TimeUnit.SECONDS.sleep(5);
+                            continue;
                         }
                         List<String> list = Stream.of(xxlJobGroup.getAddressList().split(","))
                                 .collect(Collectors.toList());
                         ReturnT<String> routeAddressResult = idleThreadBasedTaskAllocator.route(new TriggerParam(), list);
                         if (routeAddressResult.getCode() != ReturnT.SUCCESS_CODE){
-                            logger.warn("执行路由线程路由未匹配资源");
-                            System.err.println("执行路由线程路由未匹配资源！");
-                            return;
+                            TimeUnit.MILLISECONDS.sleep(1000);
+                            continue;
                         }
 
                         String address = routeAddressResult.getContent();
@@ -134,7 +132,6 @@ public class TaskQueueHelper implements ApplicationRunner {
                         if (nextTask != null) {
                             try {
                                 String id = nextTask.getId();
-                                System.out.println("id = " + id);
                                 JobTriggerPoolHelper.triggerSharding(Long.parseLong(id), TriggerTypeEnum.MANUAL, -1, null, null, address,1);
                             } catch (Exception e) {
                                 logger.error(">>>>>>>>>>> sort task execute error: {}", e.getMessage(), e);
@@ -152,9 +149,9 @@ public class TaskQueueHelper implements ApplicationRunner {
                 logger.info(">>>>>>>>>>> sort task thread stop");
             }
         });
-        sortTaskThread.setDaemon(true);
-        sortTaskThread.setName("xxl-job, admin TaskQueueHelper#sortTaskThread");
-        sortTaskThread.start();
+        taskThread.setDaemon(true);
+        taskThread.setName("xxl-job, admin TaskQueueHelper#sortTaskThread");
+        taskThread.start();
     }
 
     /**
