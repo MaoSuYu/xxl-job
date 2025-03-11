@@ -1,5 +1,6 @@
 package com.xxl.job.admin.controller;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.extra.spring.SpringUtil;
 import com.xxl.job.admin.core.util.TimeConverterUtil;
@@ -18,11 +19,9 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.ObjectUtils;
 
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -75,11 +74,65 @@ public class JobInfoControllerTest extends AbstractSpringMvcTest {
     handleShardingParam.setEndTimeOfData("2023-10-05 14:40:45");// 数据时间间隔
     handleShardingParam.setDataInterval(2);// 数据时间间隔
     handleShardingParam.setTimeUnit(TimeUnit.MINUTE);
-    handleShardingParam.setAppName("xxl-job-executor-sample");// 执行器服务名称
+    handleShardingParam.setAppName("vip-executor");// 执行器服务名称
     handleShardingParam.setId(1897554446039736320l);// 任务id
     handleShardingParam.setIsAutomatic(0);
+    handleShardingParam.setExecuteHandle("demoJobHandler");
 
     xxlJobServiceImpl.ShardingTrigger(handleShardingParam);
+  }
+
+
+
+
+
+  @Test
+  public void testShardingTriggerWithMultipleTimeRanges() throws Exception {
+    XxlJobServiceImpl xxlJobService = SpringUtil.getBean(XxlJobServiceImpl.class);
+    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    Calendar calendar = Calendar.getInstance();
+
+    // 初始时间设置为示例中的开始时间
+    calendar.set(2023, Calendar.OCTOBER, 5, 14, 30, 45);
+    Date startTime = calendar.getTime();
+
+    // 创建基础参数对象
+    HandleShardingParam baseParam = createBaseParam();
+
+    for (int i = 0; i < 10; i++) {
+      // 创建新参数对象
+      HandleShardingParam param = new HandleShardingParam();
+      BeanUtil.copyProperties(baseParam,param);
+
+      // 设置时间范围（每次递增10分钟）
+      calendar.setTime(startTime);
+      calendar.add(Calendar.MINUTE, i * 10);
+      Date currentStart = calendar.getTime();
+
+      calendar.add(Calendar.MINUTE, 10);
+      Date currentEnd = calendar.getTime();
+
+      param.setStartTimeOfData(sdf.format(currentStart));
+      param.setEndTimeOfData(sdf.format(currentEnd));
+
+      // 执行触发
+      xxlJobService.ShardingTrigger(param);
+    }
+  }
+
+  private HandleShardingParam createBaseParam() {
+    HandleShardingParam param = new HandleShardingParam();
+    param.setSchedulingInterval(3);
+    param.setSchedulingCycle(TimeUnit.MINUTE);
+    param.setFirstSchedulingTime("2023-10-05 14:30:45");
+    param.setSchedulingDeadline("2023-10-05 14:40:45");
+    param.setDataInterval(2);
+    param.setTimeUnit(TimeUnit.MINUTE);
+    param.setAppName("vip-executor");
+    param.setId(1897554446039736320L);
+    param.setIsAutomatic(0);
+    param.setExecuteHandle("demoJobHandler");
+    return param;
   }
 
 
@@ -89,15 +142,38 @@ public class JobInfoControllerTest extends AbstractSpringMvcTest {
     HandleShardingParam handleShardingParam = new HandleShardingParam();
     handleShardingParam.setSchedulingInterval(1);//调度间隔
     handleShardingParam.setSchedulingCycle(TimeUnit.MINUTE);//
-    handleShardingParam.setFirstSchedulingTime("2025-03-08 11:01:30");// 调度的首次时间
-    handleShardingParam.setSchedulingDeadline("2025-03-08 11:04:30");// 调度的截止时间
+    handleShardingParam.setFirstSchedulingTime("2025-03-11 16:29:30");// 调度的首次时间
+    handleShardingParam.setSchedulingDeadline("2025-03-11 16:33:30");// 调度的截止时间
     handleShardingParam.setStartTimeOfData("2023-10-05 14:30:45");// 数据的开始时间
     handleShardingParam.setEndTimeOfData("2023-10-05 14:40:45");// 数据时间间隔
     handleShardingParam.setDataInterval(1);// 数据时间间隔
     handleShardingParam.setTimeUnit(TimeUnit.MINUTE);
-    handleShardingParam.setAppName("xxl-job-executor-sample");// 执行器服务名称
+    handleShardingParam.setAppName("normal");// 执行器服务名称
     handleShardingParam.setId(1897554446039736320l);// 任务id
     handleShardingParam.setIsAutomatic(1);
+    handleShardingParam.setPriority(2);
+    handleShardingParam.setExecuteHandle("demoJobHandler");
+
+    xxlJobServiceImpl.ShardingTrigger(handleShardingParam);
+  }
+
+@Test
+  public void testTriggerAutomatic2() throws Exception {
+    XxlJobServiceImpl xxlJobServiceImpl = (XxlJobServiceImpl)SpringUtil.getBean("xxlJobServiceImpl");
+    HandleShardingParam handleShardingParam = new HandleShardingParam();
+    handleShardingParam.setSchedulingInterval(1);//调度间隔
+    handleShardingParam.setSchedulingCycle(TimeUnit.MINUTE);//
+    handleShardingParam.setFirstSchedulingTime("2025-03-11 12:52:30");// 调度的首次时间
+    handleShardingParam.setSchedulingDeadline("2025-03-11 12:55:30");// 调度的截止时间
+    handleShardingParam.setStartTimeOfData("2023-10-06 14:30:45");// 数据的开始时间
+    handleShardingParam.setEndTimeOfData("2023-10-06 14:40:45");// 数据时间间隔
+    handleShardingParam.setDataInterval(1);// 数据时间间隔
+    handleShardingParam.setTimeUnit(TimeUnit.MINUTE);
+    handleShardingParam.setAppName("normal");// 执行器服务名称
+    handleShardingParam.setId(1897554446039736322l);// 任务id
+    handleShardingParam.setIsAutomatic(1);
+    handleShardingParam.setPriority(1);
+  handleShardingParam.setExecuteHandle("demoJobHandler");
 
     xxlJobServiceImpl.ShardingTrigger(handleShardingParam);
   }
