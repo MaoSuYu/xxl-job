@@ -52,6 +52,29 @@ public class RedisSortedQueueFactory {
         
         return (RedisSortedQueue<T>) queue;
     }
+
+    public <T> RedisSortedQueue<T> getQueue(String queueName, Class<T> clazz, boolean fifoMode) {
+        String cacheKey = queueName + ":" + clazz.getName();
+
+        // 首先尝试从缓存获取
+        RedisSortedQueue<?> queue = queueCache.get(cacheKey);
+        if (queue == null) {
+            // 使用双重检查锁定模式确保线程安全
+            lock.lock();
+            try {
+                queue = queueCache.get(cacheKey);
+                if (queue == null) {
+                    logger.info("创建新的Redis有序队列实例: {}", cacheKey);
+                    queue = new RedisSortedQueue<>(redisTemplate, queueName, clazz, fifoMode);
+                    queueCache.put(cacheKey, queue);
+                }
+            } finally {
+                lock.unlock();
+            }
+        }
+
+        return (RedisSortedQueue<T>) queue;
+    }
     
     /**
      * 清除队列缓存
