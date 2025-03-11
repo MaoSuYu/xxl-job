@@ -56,8 +56,6 @@ public class XxlJobScheduler  {
         // 启动任务调度线程
         // 依赖于触发线程池，负责任务的调度触发
         JobScheduleHelper.getInstance().start();
-        //
-        TaskQueueHelper.getInstance().start();
 
         logger.info(">>>>>>>>> init xxl-job admin success.");
     }
