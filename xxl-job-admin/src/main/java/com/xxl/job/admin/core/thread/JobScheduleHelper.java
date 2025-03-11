@@ -7,12 +7,16 @@ import com.xuxueli.springbootpriorityqueue.service.TaskService;
 import com.xxl.job.admin.core.conf.XxlJobAdminConfig;
 import com.xxl.job.admin.core.cron.CronExpression;
 import com.xxl.job.admin.core.model.XxlJobInfo;
+import com.xxl.job.admin.core.model.XxlJobShardingInfo;
 import com.xxl.job.admin.core.scheduler.MisfireStrategyEnum;
 import com.xxl.job.admin.core.scheduler.ScheduleTypeEnum;
 import com.xxl.job.admin.core.trigger.TriggerTypeEnum;
+import com.xxl.job.admin.core.trigger.XxlJobTrigger;
 import com.xxl.job.admin.core.util.TimeConverterUtil;
+import com.xxl.job.core.context.XxlJobHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -104,7 +108,7 @@ public class JobScheduleHelper {
                                     MisfireStrategyEnum misfireStrategyEnum = MisfireStrategyEnum.match(jobInfo.getMisfireStrategy(), MisfireStrategyEnum.DO_NOTHING);
                                     if (MisfireStrategyEnum.FIRE_ONCE_NOW == misfireStrategyEnum) {
                                         System.err.println("--- "  );
-                                        taskService.addTask(new Task(jobInfo.getId().toString(),jobInfo.getJobDesc(),jobInfo.getJobDesc()),jobInfo.getPriority());
+                                        getXxlJobInfosPushQueue(taskService,jobInfo.getId());
                                         // 立即执行一次
                                         //JobTriggerPoolHelper.triggerSharding(jobInfo, TriggerTypeEnum.MISFIRE, -1, null, null, null);
                                         logger.debug(">>>>>>>>>>> xxl-job, schedule push trigger : jobId = " + jobInfo.getId() );
@@ -116,7 +120,7 @@ public class JobScheduleHelper {
                                 } else if (nowTime > jobInfo.getTriggerNextTime()) {
                                     // 2.2、任务过期小于5秒：直接触发一次，并更新下次触发时间
                                     System.err.println("--- "  );
-                                    taskService.addTask(new Task(jobInfo.getId().toString(),jobInfo.getJobDesc(),jobInfo.getJobDesc()),jobInfo.getPriority());
+                                    getXxlJobInfosPushQueue(taskService,jobInfo.getId());
                                     //JobTriggerPoolHelper.triggerSharding(jobInfo, TriggerTypeEnum.CRON, -1, null, null, null);
                                     logger.debug(">>>>>>>>>>> xxl-job, schedule push trigger : jobId = " + jobInfo.getId() );
 
@@ -248,10 +252,10 @@ public class JobScheduleHelper {
                                     .map(String::valueOf)
                                     .collect(Collectors.toList());
                             List<XxlJobInfo> xxlJobInfos = XxlJobAdminConfig.getAdminConfig().getXxlJobInfoDao().loadByIds(stringList);
+                            TaskService taskService = (TaskService)SpringUtil.getBean("taskService");
                             for (XxlJobInfo xxlJobInfo: xxlJobInfos) {
                                 // 触发任务
-                                TaskService taskService = (TaskService)SpringUtil.getBean("taskService");
-                                taskService.addTask(new Task(xxlJobInfo.getId().toString(),xxlJobInfo.getJobDesc(),xxlJobInfo.getJobDesc()),xxlJobInfo.getPriority());
+                                getXxlJobInfosPushQueue(taskService,xxlJobInfo.getId());
                                 //JobTriggerPoolHelper.triggerSharding(xxlJobInfo, TriggerTypeEnum.CRON, -1, null, null, null);
                             }
                             ringItemData.clear();
@@ -268,6 +272,13 @@ public class JobScheduleHelper {
         ringThread.setDaemon(true);
         ringThread.setName("xxl-job, admin JobScheduleHelper#ringThread");
         ringThread.start();
+    }
+
+    private void getXxlJobInfosPushQueue(TaskService taskService,Long id) {
+        List<XxlJobInfo> listByIds = XxlJobAdminConfig.getAdminConfig().getXxlJobInfoDao().findListByParentJobId(id, 1);
+        for (XxlJobInfo shardingInfo : listByIds) {
+            taskService.addTask(new Task(shardingInfo.getId().toString(),shardingInfo.getJobDesc(),shardingInfo.getJobDesc()),shardingInfo.getPriority());
+        }
     }
 
     /**

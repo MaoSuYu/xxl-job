@@ -188,7 +188,7 @@ public class JobTriggerPoolHelper {
                            final int failRetryCount,
                            final String executorShardingParam,
                            final String executorParam,
-                           final String addressList) {
+                           final String addressList,int isAutomatic) {
 
         // 根据任务超时情况选择线程池
         ThreadPoolExecutor triggerPool_ = fastTriggerPool;
@@ -204,7 +204,7 @@ public class JobTriggerPoolHelper {
                 long start = System.currentTimeMillis();
                 try {
                     // 触发任务执行
-                    XxlJobTrigger.triggerSharding(jobId, triggerType, failRetryCount, executorShardingParam, executorParam, addressList);
+                    XxlJobTrigger.triggerSharding(jobId, triggerType, failRetryCount, executorShardingParam, executorParam, addressList,isAutomatic);
                 } catch (Throwable e) {
                     logger.error(e.getMessage(), e);
                 } finally {
@@ -257,9 +257,9 @@ public class JobTriggerPoolHelper {
      * 添加任务触发请求的静态方法
      * 通过单例实例调用addTrigger方法
      */
-    public static void triggerSharding(Long jobId, TriggerTypeEnum triggerType, int failRetryCount, String executorShardingParam, String executorParam, String addressList) {
+    public static void triggerSharding(Long jobId, TriggerTypeEnum triggerType, int failRetryCount, String executorShardingParam, String executorParam, String addressList,int isAutomatic) {
 
-        helper.addTriggerSharding(jobId, triggerType, failRetryCount, executorShardingParam, executorParam, addressList);
+        helper.addTriggerSharding(jobId, triggerType, failRetryCount, executorShardingParam, executorParam, addressList,isAutomatic);
     }
 
     /**

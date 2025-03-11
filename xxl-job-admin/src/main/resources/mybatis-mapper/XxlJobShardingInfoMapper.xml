@@ -31,11 +31,11 @@
         WHERE parent_job_id = #{id};
     </delete>
 
-    <select id="findListByParentJobId" resultType="com.xxl.job.admin.core.model.XxlJobShardingInfo">
-        select xjsi.id,xjsi.params from xxl_job_sharding_info xjsi
-        left join xxl_job_info xji on xjsi.parent_job_id = xji.id
-        where xjsi.delete_flag = 0 and xji.is_automatic =#{isAutomatic}
-    </select>
+<!--    <select id="findListByParentJobId" resultType="com.xxl.job.admin.core.model.XxlJobShardingInfo">-->
+<!--        select xjsi.id,xjsi.params from xxl_job_sharding_info xjsi-->
+<!--        left join xxl_job_info t on xjsi.parent_job_id = t.id-->
+<!--        where xjsi.delete_flag = 0 and t.is_automatic =#{isAutomatic}-->
+<!--    </select>-->
 
     <select id="findMaxExecuteBatch" resultType="int">
         SELECT IFNULL(MAX(execute_batch), 0) FROM xxl_job_sharding_info where delete_flag = 0 and parent_job_id = #{parentJobId}
@@ -45,7 +45,7 @@
         update xxl_job_sharding_info set execute_state =#{state}, execute_number = execute_number + 1 where id = #{id}
     </update>
 
-<!--    <update id="updateTriggerInfo">-->
+    <!--    <update id="updateTriggerInfo">-->
 <!--        update xxl_job_sharding_info set execute_state =#{state} ,  execute_number = execute_number + 1 where id = #{id}-->
 <!--    </update>-->
 </mapper>

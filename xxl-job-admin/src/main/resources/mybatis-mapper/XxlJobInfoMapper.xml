@@ -43,6 +43,40 @@
 		<result column="time_unit" property="timeUnit" />
 	</resultMap>
 
+	<sql id="Base_Column_List1">
+		xjsi.id,
+        xjsi.params as executor_param,
+		t.job_group ,
+		t.job_desc,
+		t.add_time,
+		t.update_time,
+		t.author,
+		t.alarm_email,
+		t.schedule_type,
+		t.schedule_conf,
+		t.misfire_strategy,
+		t.executor_route_strategy,
+		t.executor_handler,
+		t.executor_param,
+		t.executor_block_strategy,
+		t.executor_timeout,
+		t.executor_fail_retry_count,
+		t.glue_type,
+		t.glue_source,
+		t.glue_remark,
+		t.glue_updatetime,
+		t.child_jobid,
+		t.trigger_status,
+		t.trigger_last_time,
+		t.trigger_next_time,
+		t.first_scheduling_time,
+		t.scheduling_dead_line,
+		t.data_interval,
+		t.time_unit,
+		t.priority,
+		t.is_automatic
+	</sql>
+
 	<sql id="Base_Column_List">
 		t.id,
 		t.job_group,
@@ -71,7 +105,9 @@
 		t.first_scheduling_time,
 		t.scheduling_dead_line,
 		t.data_interval,
-		t.time_unit
+		t.time_unit,
+		t.priority,
+		t.is_automatic
 		</sql>
 
 	<select id="pageList" parameterType="java.util.HashMap" resultMap="XxlJobInfo">
@@ -289,5 +325,19 @@
 		<foreach collection="ids" item="id" open="(" separator="," close=")">
 			#{id}
 		</foreach>
+	</select>
+
+
+
+	<select id="loadByShardingId" resultMap="XxlJobInfo">
+		select <include refid="Base_Column_List1" /> from  xxl_job_info  t
+					left join xxl_job_sharding_info xjsi on xjsi.parent_job_id = t.id
+		where xjsi.delete_flag = 0 and xjsi.id = #{jobId}
+	</select>
+
+	<select id="findListByParentJobId" resultMap="XxlJobInfo">
+		select <include refid="Base_Column_List1" /> from  xxl_job_info  t
+		left join xxl_job_sharding_info xjsi on xjsi.parent_job_id = t.id
+		where xjsi.delete_flag = 0 and t.id = #{jobId}  and t.is_automatic =#{isAutomatic}
 	</select>
 </mapper>

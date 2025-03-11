@@ -19,11 +19,12 @@ public interface XxlJobShardingInfoDao {
 
     int logicDeleteByParentId(@Param("id") Long id);
 
-    List<XxlJobShardingInfo> findListByParentJobId(@Param("id") Long id,@Param("isAutomatic") Integer isAutomatic);
+    //List<XxlJobShardingInfo> findListByParentJobId(@Param("id") Long id,@Param("isAutomatic") Integer isAutomatic);
 
     int findMaxExecuteBatch(@Param("parentJobId") Long id);
 
     int updateExecuteInfo(@Param("state") int state,@Param("id") Long id);
+
 
     //int updateTriggerInfo(@Param("state") int state,@Param("id") Long id);
 }
