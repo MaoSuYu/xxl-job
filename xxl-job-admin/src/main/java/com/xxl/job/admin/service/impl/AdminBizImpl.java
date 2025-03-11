@@ -34,7 +34,7 @@ public class AdminBizImpl implements AdminBiz {
 
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
-    
+
     @Autowired
     private XxlJobInfoDao xxlJobInfoDao;
 
@@ -58,23 +58,23 @@ public class AdminBizImpl implements AdminBiz {
         if (CollectionUtils.isEmpty(threadInfoList)) {
             return ReturnT.SUCCESS;
         }
-        
+
         logger.info("接收到执行器线程信息上报，共 {} 个线程", threadInfoList.size());
-        
+
         // 记录线程详细信息（使用条件判断避免不必要的字符串拼接）
-logger.debug("线程详细信息: {}",
+        logger.debug("线程详细信息: {}",
                 threadInfoList.stream()
-                    .map(info -> String.format("线程ID:%s(状态:%s)", info.getJobId(), info.getThreadState()))
-                    .collect(Collectors.joining(", ")));
-        
+                        .map(info -> String.format("线程ID:%s(状态:%s)", info.getJobId(), info.getThreadState()))
+                        .collect(Collectors.joining(", ")));
+
         // 直接提取所有jobId，不需要类型转换
         List<Long> jobIds = threadInfoList.stream()
                 .map(ThreadInfo::getJobId)
                 .distinct() // 去重，减少数据库查询量
                 .collect(Collectors.toList());
-        
+
         // 批量查询所有jobId对应的title
-        Map<Long, String> jobTitleMap = new HashMap<>(jobIds.size() * 4/3 + 1); // 预分配合适的容量
+        Map<Long, String> jobTitleMap = new HashMap<>(jobIds.size() * 4 / 3 + 1); // 预分配合适的容量
         if (!CollectionUtils.isEmpty(jobIds)) {
             List<Map<String, Object>> titleList = xxlJobInfoDao.batchGetGroupTitleByJobIds(jobIds);
             if (!CollectionUtils.isEmpty(titleList)) {
@@ -85,16 +85,17 @@ logger.debug("线程详细信息: {}",
                 });
             }
         }
-        
+
         // 使用Redis的管道操作批量写入数据
         stringRedisTemplate.executePipelined((RedisCallback<Object>) connection -> {
             for (ThreadInfo threadInfo : threadInfoList) {
                 // 获取任务对应的执行器组title
                 String title = jobTitleMap.getOrDefault(threadInfo.getJobId(), "未知执行器");
                 threadInfo.setExecutorTitle(title);
-                
+
                 // 构建redisKey，使用StringBuilder的预分配容量
-                String redisKey = new StringBuilder(64)
+                String redisKey = new StringBuilder(128)
+                        .append("current_running_task:")
                         .append(threadInfo.getAppName())
                         .append(':')
                         .append(threadInfo.getIp())
@@ -103,15 +104,15 @@ logger.debug("线程详细信息: {}",
                         .append(':')
                         .append(threadInfo.getJobId())
                         .toString();
-                
+
                 // 将线程信息序列化为JSON
                 String jsonValue = JSON.toJSONString(threadInfo);
-                
+
                 // 使用管道批量写入Redis (使用字节数组方式)
                 byte[] keyBytes = redisKey.getBytes();
                 byte[] valueBytes = jsonValue.getBytes();
                 connection.setEx(keyBytes, 10, valueBytes);
-                
+
                 // 记录每个线程的处理情况（使用条件判断避免不必要的字符串拼接）
                 if (logger.isDebugEnabled()) {
                     logger.debug("线程信息已存入Redis，key={}, title={}, state={}, 过期时间=10秒",
@@ -120,9 +121,9 @@ logger.debug("线程详细信息: {}",
             }
             return null;
         });
-        
+
         logger.info("成功将 {} 个线程信息批量存入Redis，过期时间=10秒", threadInfoList.size());
-        
+
         return ReturnT.SUCCESS;
     }
 }

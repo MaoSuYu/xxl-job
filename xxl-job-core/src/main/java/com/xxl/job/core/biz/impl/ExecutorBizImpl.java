@@ -286,4 +286,9 @@ public class ExecutorBizImpl implements ExecutorBiz {
         return ReturnT.SUCCESS;
     }
 
+    @Override
+    public ReturnT<String> offline(String id) {
+        return null;
+    }
+
 }

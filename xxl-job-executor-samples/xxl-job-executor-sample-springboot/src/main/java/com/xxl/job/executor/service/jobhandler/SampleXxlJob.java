@@ -41,17 +41,17 @@ public class SampleXxlJob {
     public void demoJobHandler() throws Exception {
         String jobParam = XxlJobHelper.getJobParam();
 
-        System.out.println("jobParam = " + jobParam);
+//        System.out.println("jobParam = " + jobParam);
 //        JobThreadContext.setJobThreadContextMap(XxlJobHelper.getJobId(), Thread.currentThread());
 //        while (true) {
 //            System.err.println("正在执行...");
 //        }
 //        TimeUnit.SECONDS.sleep(15);
 //        TimeUnit.DAYS.sleep(1);
-//        while (true) {
-//            System.err.println("执行中...");
-//            TimeUnit.SECONDS.sleep(1);
-//        }
+        while (true) {
+            System.err.println("执行中...");
+            TimeUnit.SECONDS.sleep(1);
+        }
 //        throw new RuntimeException();
     }
 

@@ -28,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -196,13 +197,17 @@ public class JobInfoController {
 		// 3. 调用执行器的强制打断接口
 		try {
 			ExecutorBiz executorBiz = XxlJobScheduler.getExecutorBiz(executorAddress);
-//			executorBiz.kill(new KillParam(id));
-//			return null;
 			return executorBiz.forceKill(id);
 		} catch (Exception e) {
 			logger.error("强制打断任务失败 [任务ID:{}] [执行器:{}] [异常:{}]", id, executorAddress, e.getMessage());
 			return new ReturnT<>(ReturnT.FAIL_CODE, "强制打断任务失败：" + e.getMessage());
 		}
+	}
+
+	@GetMapping("/offline")
+	@ResponseBody
+	public ReturnT<String> offline(@RequestParam("ip") String ip) {
+		return null;
 	}
 
 }

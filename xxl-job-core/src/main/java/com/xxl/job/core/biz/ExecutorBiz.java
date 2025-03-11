@@ -59,4 +59,12 @@ public interface ExecutorBiz {
      */
     public ReturnT<String> forceKill(Long jobId);
 
+
+    /**
+     * 下线
+     * @param id
+     * @return
+     */
+    public ReturnT<String> offline(String id);
+
 }

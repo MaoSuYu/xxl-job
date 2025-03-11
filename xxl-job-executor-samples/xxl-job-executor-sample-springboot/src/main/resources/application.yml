@@ -11,7 +11,7 @@ xxl:
       accessToken: default_token
       timeout: 3
     executor:
-      appname: xxl-job-executor-sample
+      appname: vip-executor
       address: 
       ip: 
       port: 9999
