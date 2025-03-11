@@ -34,7 +34,7 @@
     <select id="findListByParentJobId" resultType="com.xxl.job.admin.core.model.XxlJobShardingInfo">
         select xjsi.id,xjsi.params from xxl_job_sharding_info xjsi
         left join xxl_job_info xji on xjsi.parent_job_id = xji.id
-        where xjsi.delete_flag = 0 and xji.is_automatic =1
+        where xjsi.delete_flag = 0 and xji.is_automatic =#{isAutomatic}
     </select>
 
     <select id="findMaxExecuteBatch" resultType="int">

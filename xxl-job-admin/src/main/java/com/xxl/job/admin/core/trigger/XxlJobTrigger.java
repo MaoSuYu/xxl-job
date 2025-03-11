@@ -299,7 +299,7 @@ public class XxlJobTrigger {
         ExecutorRouteStrategyEnum executorRouteStrategyEnum = ExecutorRouteStrategyEnum.match(jobInfo.getExecutorRouteStrategy(), null);    // route strategy
         String shardingParam = (ExecutorRouteStrategyEnum.SHARDING_BROADCAST == executorRouteStrategyEnum) ? String.valueOf(index).concat("/").concat(String.valueOf(total)) : null;
 
-        List<XxlJobShardingInfo> listByIds = XxlJobAdminConfig.getAdminConfig().getXxlJobShardingInfoDao().findListByParentJobId(jobInfo.getId());
+        List<XxlJobShardingInfo> listByIds = XxlJobAdminConfig.getAdminConfig().getXxlJobShardingInfoDao().findListByParentJobId(jobInfo.getId(),jobInfo.getIsAutomatic());
         List<XxlJobInfo> ShardingInfos = new ArrayList<>();
         for (XxlJobShardingInfo shardingInfo : listByIds) {
             XxlJobInfo xxlJobInfo = new XxlJobInfo();
