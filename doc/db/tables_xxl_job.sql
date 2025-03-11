@@ -60,7 +60,8 @@ ALTER TABLE `xxl_job_info`
     ADD COLUMN `data_interval` int(11) DEFAULT NULL COMMENT '数据间隔',
     ADD COLUMN `time_unit` varchar(50) DEFAULT NULL COMMENT '数据时间单位MINUTE, HOUR, DAY, WEEK, MONTH',
     ADD COLUMN `scheduling_interval` int(11) DEFAULT NULL COMMENT '调度间隔',
-    ADD COLUMN `scheduling_cycle` varchar(50) DEFAULT NULL COMMENT '调度时间单位MINUTE, HOUR, DAY, WEEK, MONTH';
+    ADD COLUMN `scheduling_cycle` varchar(50) DEFAULT NULL COMMENT '调度时间单位MINUTE, HOUR, DAY, WEEK, MONTH',
+    ADD COLUMN `is_automatic` int(2) DEFAULT NULL COMMENT '是否自动，0手动1自动';
 
 CREATE TABLE `xxl_job_log`
 (

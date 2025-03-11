@@ -103,6 +103,7 @@ public class JobScheduleHelper {
                                     // 处理过期任务
                                     MisfireStrategyEnum misfireStrategyEnum = MisfireStrategyEnum.match(jobInfo.getMisfireStrategy(), MisfireStrategyEnum.DO_NOTHING);
                                     if (MisfireStrategyEnum.FIRE_ONCE_NOW == misfireStrategyEnum) {
+                                        System.err.println("--- "  );
                                         taskService.addTask(new Task(jobInfo.getId().toString(),jobInfo.getJobDesc(),jobInfo.getJobDesc()),jobInfo.getPriority());
                                         // 立即执行一次
                                         //JobTriggerPoolHelper.triggerSharding(jobInfo, TriggerTypeEnum.MISFIRE, -1, null, null, null);
@@ -114,7 +115,7 @@ public class JobScheduleHelper {
 
                                 } else if (nowTime > jobInfo.getTriggerNextTime()) {
                                     // 2.2、任务过期小于5秒：直接触发一次，并更新下次触发时间
-
+                                    System.err.println("--- "  );
                                     taskService.addTask(new Task(jobInfo.getId().toString(),jobInfo.getJobDesc(),jobInfo.getJobDesc()),jobInfo.getPriority());
                                     //JobTriggerPoolHelper.triggerSharding(jobInfo, TriggerTypeEnum.CRON, -1, null, null, null);
                                     logger.debug(">>>>>>>>>>> xxl-job, schedule push trigger : jobId = " + jobInfo.getId() );
@@ -238,7 +239,7 @@ public class JobScheduleHelper {
                                 ringItemData.addAll(tmpData);
                             }
                         }
-
+                        System.err.println("ringItemData = " + ringItemData.size());
                         // 触发时间轮中的任务
                         logger.debug(">>>>>>>>>>> xxl-job, time-ring beat : " + nowSecond + " = " + Arrays.asList(ringItemData) );
                         if (ringItemData.size() > 0) {

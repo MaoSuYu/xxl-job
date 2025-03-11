@@ -78,6 +78,20 @@ public class XxlJobInfo {
 	 */
 	private int priority;
 
+	/**
+	 * 是否自动，0手动1自动*
+	 * @return
+	 */
+	private int isAutomatic;
+
+	public int getIsAutomatic() {
+		return isAutomatic;
+	}
+
+	public void setIsAutomatic(int isAutomatic) {
+		this.isAutomatic = isAutomatic;
+	}
+
 	public int getPriority() {
 		return priority;
 	}

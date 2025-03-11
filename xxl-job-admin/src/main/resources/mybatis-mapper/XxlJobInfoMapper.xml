@@ -150,7 +150,8 @@
 		    scheduling_dead_line,
 		    data_interval,
 		    time_unit,
-		    priority
+		    priority,
+		    is_automatic
 		) VALUES (
 		    #{id},
 			#{jobGroup},
@@ -180,7 +181,8 @@
 		    #{schedulingDeadline},
 		    #{dataInterval},
 		    #{timeUnit},
-			#{priority}
+			#{priority},
+			#{isAutomatic}
 		);
 		<!--<selectKey resultType="java.lang.Integer" order="AFTER" keyProperty="id">
 			SELECT LAST_INSERT_ID()

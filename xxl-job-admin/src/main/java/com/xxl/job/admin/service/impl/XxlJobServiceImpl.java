@@ -503,6 +503,7 @@ public class XxlJobServiceImpl implements XxlJobService {
 		xxlJobInfo.setSchedulingCycle(handleShardingParam.getSchedulingCycle().name());
 		xxlJobInfo.setTriggerStatus(handleShardingParam.getIsAutomatic() == 1 ? 1 : 0);
 		xxlJobInfo.setPriority(handleShardingParam.getPriority());
+		xxlJobInfo.setIsAutomatic(handleShardingParam.getIsAutomatic() == 1 ? 1 : 0);
 		return xxlJobInfo;
 	}
 
