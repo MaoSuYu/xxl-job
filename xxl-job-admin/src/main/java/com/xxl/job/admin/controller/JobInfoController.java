@@ -207,6 +207,12 @@ public class JobInfoController {
 	@GetMapping("/offline")
 	@ResponseBody
 	public ReturnT<String> offline(@RequestParam("ip") String ip) {
+		// 验证IP格式是否符合要求
+		String regex = "^http://\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}:\\d+/?$";
+		if (!ip.matches(regex)) {
+			return new ReturnT<>(ReturnT.FAIL_CODE, "IP格式不正确，正确格式应为：http://127.0.0.1:1003");
+		}
+		
 		try {
 			// 获取执行器客户端
 			ExecutorBiz executorBiz = XxlJobScheduler.getExecutorBiz(ip);
