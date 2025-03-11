@@ -29,8 +29,8 @@ public class PermissionInterceptor implements AsyncHandlerInterceptor {
 
 	@Override
 	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-		
-		if (!(handler instanceof HandlerMethod)) {
+
+		/*if (!(handler instanceof HandlerMethod)) {
 			return true;	// proceed with the next interceptor
 		}
 
@@ -57,7 +57,7 @@ public class PermissionInterceptor implements AsyncHandlerInterceptor {
 
 			// set loginUser, with request
 			setLoginUser(request, loginUser);
-		}
+		}*/
 
 		return true;	// proceed with the next interceptor
 	}
@@ -127,5 +127,5 @@ public class PermissionInterceptor implements AsyncHandlerInterceptor {
 		return jobGroupList;
 	}
 
-	
+
 }

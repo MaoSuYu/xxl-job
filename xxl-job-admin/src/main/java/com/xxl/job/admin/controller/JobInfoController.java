@@ -17,6 +17,7 @@ import com.xxl.job.admin.dao.XxlJobGroupDao;
 import com.xxl.job.admin.dao.XxlJobTaskExecutorMappingMapper;
 import com.xxl.job.admin.service.XxlJobService;
 import com.xxl.job.core.biz.ExecutorBiz;
+import com.xxl.job.core.biz.model.HandleShardingParam;
 import com.xxl.job.core.biz.model.KillParam;
 import com.xxl.job.core.biz.model.ReturnT;
 import com.xxl.job.core.enums.ExecutorBlockStrategyEnum;
@@ -28,10 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 
@@ -151,6 +149,14 @@ public class JobInfoController {
 		return xxlJobService.trigger(loginUser, id, executorParam, addressList);
 	}
 
+
+	@RequestMapping("/triggerSharding")
+	@ResponseBody
+	public ReturnT<String> triggerSharding(@RequestBody HandleShardingParam handleShardingParam) {
+		// 调用服务层的trigger方法，执行任务触发逻辑
+		return xxlJobService.ShardingTrigger(handleShardingParam);
+	}
+
 	@RequestMapping("/nextTriggerTime")
 	@ResponseBody
 	public ReturnT<List<String>> nextTriggerTime(@RequestParam("scheduleType") String scheduleType,
@@ -212,14 +218,14 @@ public class JobInfoController {
 		if (!ip.matches(regex)) {
 			return new ReturnT<>(ReturnT.FAIL_CODE, "IP格式不正确，正确格式应为：http://127.0.0.1:1003");
 		}
-		
+
 		try {
 			// 获取执行器客户端
 			ExecutorBiz executorBiz = XxlJobScheduler.getExecutorBiz(ip);
 			if (executorBiz == null) {
 				return new ReturnT<>(ReturnT.FAIL_CODE, "获取执行器客户端失败，执行器可能已离线");
 			}
-			
+
 			// 调用执行器的offline方法
 			return executorBiz.offline(ip);
 		} catch (Exception e) {
