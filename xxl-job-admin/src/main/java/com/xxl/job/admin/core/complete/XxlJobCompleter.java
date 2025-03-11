@@ -110,7 +110,7 @@ public class XxlJobCompleter {
 
                             // 通过任务触发池帮助类触发子任务，使用分片触发方式
                             // 参数说明：子任务信息、触发类型为父任务触发、分片索引为-1（不分片）、无分片总数、无分片参数、无执行参数
-                            JobTriggerPoolHelper.triggerSharding((long)childJobId, TriggerTypeEnum.PARENT, -1, null, null, null);
+                            JobTriggerPoolHelper.triggerSharding((long)childJobId, TriggerTypeEnum.PARENT, -1, null, null, null,childxxlJobInfo.getIsAutomatic());
                             // 设置触发结果为成功
                             ReturnT<String> triggerChildResult = ReturnT.SUCCESS;
 

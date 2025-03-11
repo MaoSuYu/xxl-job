@@ -1,6 +1,7 @@
 package com.xxl.job.admin.dao;
 
 import com.xxl.job.admin.core.model.XxlJobInfo;
+import com.xxl.job.admin.core.model.XxlJobShardingInfo;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -80,4 +81,8 @@ public interface XxlJobInfoDao {
 
 	List<XxlJobInfo> loadByIds(@Param("ids") List<String> list);
 
+	XxlJobInfo loadByShardingId(@Param("jobId") Long jobId, @Param("isAutomatic") int isAutomatic);
+
+
+	List<XxlJobInfo> findListByParentJobId(@Param("jobId") Long jobId, @Param("isAutomatic") int isAutomatic);
 }

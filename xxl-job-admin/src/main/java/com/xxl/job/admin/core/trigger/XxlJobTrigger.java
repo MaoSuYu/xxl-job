@@ -125,8 +125,8 @@ public class XxlJobTrigger {
                                int failRetryCount,
                                String executorShardingParam,
                                String executorParam,
-                               String addressList) {
-        XxlJobInfo jobInfo = XxlJobAdminConfig.getAdminConfig().getXxlJobInfoDao().loadById(jobId);
+                               String addressList,int isAutomatic) {
+        XxlJobInfo jobInfo = XxlJobAdminConfig.getAdminConfig().getXxlJobInfoDao().loadByShardingId(jobId,isAutomatic);
         if (jobInfo == null) {
             logger.warn(">>>>>>>>>>>> trigger fail, jobId invalid，jobId={}", jobId);
             return;
@@ -299,21 +299,9 @@ public class XxlJobTrigger {
         ExecutorRouteStrategyEnum executorRouteStrategyEnum = ExecutorRouteStrategyEnum.match(jobInfo.getExecutorRouteStrategy(), null);    // route strategy
         String shardingParam = (ExecutorRouteStrategyEnum.SHARDING_BROADCAST == executorRouteStrategyEnum) ? String.valueOf(index).concat("/").concat(String.valueOf(total)) : null;
 
-        List<XxlJobShardingInfo> listByIds = XxlJobAdminConfig.getAdminConfig().getXxlJobShardingInfoDao().findListByParentJobId(jobInfo.getId(),jobInfo.getIsAutomatic());
-        List<XxlJobInfo> ShardingInfos = new ArrayList<>();
-        for (XxlJobShardingInfo shardingInfo : listByIds) {
-            XxlJobInfo xxlJobInfo = new XxlJobInfo();
-            BeanUtils.copyProperties(jobInfo, xxlJobInfo);
-
-            xxlJobInfo.setId(shardingInfo.getId());
-            xxlJobInfo.setExecutorParam(shardingInfo.getParams());
-            ShardingInfos.add(xxlJobInfo);
-        }
-
         // 循环执行任务
-        for (XxlJobInfo shardingInfo : ShardingInfos) {
-            triggerJobInfo(group, shardingInfo, finalFailRetryCount, triggerType, index, total, blockStrategy, executorRouteStrategyEnum, shardingParam);
-        }
+        triggerJobInfo(group, jobInfo, finalFailRetryCount, triggerType, index, total, blockStrategy, executorRouteStrategyEnum, shardingParam);
+
     }
 
     private static void triggerJobInfo(XxlJobGroup group, XxlJobInfo jobInfo, int finalFailRetryCount, TriggerTypeEnum triggerType, int index, int total, ExecutorBlockStrategyEnum blockStrategy, ExecutorRouteStrategyEnum executorRouteStrategyEnum, String shardingParam) {

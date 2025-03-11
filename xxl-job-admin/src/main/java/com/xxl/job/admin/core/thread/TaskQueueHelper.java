@@ -49,7 +49,7 @@ public class TaskQueueHelper {
                         if (nextTask != null) {
                             try {
                                 String id = nextTask.getId();
-                                JobTriggerPoolHelper.triggerSharding(Long.parseLong(id), TriggerTypeEnum.MANUAL, -1, null, null, null);
+                                JobTriggerPoolHelper.triggerSharding(Long.parseLong(id), TriggerTypeEnum.MANUAL, -1, null, null, null,0);
                             } catch (Exception e) {
                                 logger.error(">>>>>>>>>>> task execute error: {}", e.getMessage(), e);
                             }
@@ -83,7 +83,7 @@ public class TaskQueueHelper {
                             try {
                                 String id = nextTask.getId();
                                 System.out.println("id = " + id);
-                                JobTriggerPoolHelper.triggerSharding(Long.parseLong(id), TriggerTypeEnum.MANUAL, -1, null, null, null);
+                                JobTriggerPoolHelper.triggerSharding(Long.parseLong(id), TriggerTypeEnum.MANUAL, -1, null, null, null,1);
                             } catch (Exception e) {
                                 logger.error(">>>>>>>>>>> sort task execute error: {}", e.getMessage(), e);
                             }
