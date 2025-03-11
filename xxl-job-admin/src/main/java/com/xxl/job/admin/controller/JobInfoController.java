@@ -207,7 +207,19 @@ public class JobInfoController {
 	@GetMapping("/offline")
 	@ResponseBody
 	public ReturnT<String> offline(@RequestParam("ip") String ip) {
-		return null;
+		try {
+			// 获取执行器客户端
+			ExecutorBiz executorBiz = XxlJobScheduler.getExecutorBiz(ip);
+			if (executorBiz == null) {
+				return new ReturnT<>(ReturnT.FAIL_CODE, "获取执行器客户端失败，执行器可能已离线");
+			}
+			
+			// 调用执行器的offline方法
+			return executorBiz.offline(ip);
+		} catch (Exception e) {
+			logger.error("执行器下线失败 [执行器IP:{}] [异常:{}]", ip, e.getMessage());
+			return new ReturnT<>(ReturnT.FAIL_CODE, "执行器下线失败：" + e.getMessage());
+		}
 	}
 
 }

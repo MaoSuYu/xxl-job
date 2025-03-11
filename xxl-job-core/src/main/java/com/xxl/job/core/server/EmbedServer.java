@@ -239,6 +239,9 @@ public class EmbedServer {
                     case "/forceKill":
                         Long jobId = GsonTool.fromJson(requestData, Long.class);
                         return executorBiz.forceKill(jobId);
+                    case "/offline":
+                        String id = GsonTool.fromJson(requestData, String.class);
+                        return executorBiz.offline(id);
                     default:
                         return new ReturnT<String>(ReturnT.FAIL_CODE, "invalid request, uri-mapping(" + uri + ") not found.");
                 }

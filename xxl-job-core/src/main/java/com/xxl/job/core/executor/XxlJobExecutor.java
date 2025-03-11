@@ -33,6 +33,18 @@ public class XxlJobExecutor  {
     // 静态实例，用于存储当前执行器的信息
     private static volatile XxlJobExecutor instance;
 
+    /**
+     * 获取XxlJobExecutor单例实例
+     * 
+     * @return XxlJobExecutor实例
+     */
+    public static XxlJobExecutor getInstance() {
+        if (instance == null) {
+            throw new RuntimeException("XxlJobExecutor未初始化");
+        }
+        return instance;
+    }
+
     // ---------------------- param ----------------------
     // 管理员地址列表，用于与调度中心通信
     private String adminAddresses;
@@ -174,6 +186,28 @@ public class XxlJobExecutor  {
         JobThreadMonitorHelper.getInstance().toStop();
     }
 
+    /**
+     * 主动离线执行器
+     * 
+     * 该方法用于主动将执行器从调度中心注销，
+     * 在需要手动下线执行器时调用。
+     * 
+     * 注意：这不会停止执行器进程，只会停止向调度中心发送心跳。
+     * 已经在运行的任务会继续执行直到完成。
+     */
+    public void offline() {
+        logger.info(">>>>>>>>>>> xxl-job, 执行器主动离线开始");
+        try {
+            // 停止注册线程
+            if (embedServer != null) {
+                embedServer.stopRegistry();
+                logger.info(">>>>>>>>>>> xxl-job, 执行器注册线程已停止");
+            }
+        } catch (Exception e) {
+            logger.error(">>>>>>>>>>> xxl-job, 执行器离线失败", e);
+        }
+        logger.info(">>>>>>>>>>> xxl-job, 执行器主动离线完成");
+    }
 
     // ---------------------- admin-client (rpc invoker) ----------------------
     private static List<AdminBiz> adminBizList;

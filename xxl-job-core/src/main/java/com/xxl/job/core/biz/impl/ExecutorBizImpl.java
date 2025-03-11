@@ -13,6 +13,7 @@ import com.xxl.job.core.handler.impl.GlueJobHandler;
 import com.xxl.job.core.handler.impl.ScriptJobHandler;
 import com.xxl.job.core.log.XxlJobFileAppender;
 import com.xxl.job.core.thread.JobThread;
+import com.xxl.job.core.thread.ExecutorRegistryThread;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -288,7 +289,17 @@ public class ExecutorBizImpl implements ExecutorBiz {
 
     @Override
     public ReturnT<String> offline(String id) {
-        return null;
+        logger.info("开始执行执行器下线, 执行器ID: {}", id);
+        
+        try {
+            // 获取XxlJobExecutor实例并调用offline方法
+            XxlJobExecutor.getInstance().offline();
+            logger.info("执行器下线成功, 执行器ID: {}", id);
+            return ReturnT.SUCCESS;
+        } catch (Exception e) {
+            logger.error("执行器下线失败, 执行器ID: {}", id, e);
+            return new ReturnT<>(ReturnT.FAIL_CODE, "执行器下线失败: " + e.getMessage());
+        }
     }
 
 }
