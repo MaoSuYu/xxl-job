@@ -1,7 +1,6 @@
 package com.xxl.job.core.biz.model;
-
-
 import com.xxl.job.core.enums.TimeUnit;
+
 
 /**
  * 作者: Mr.Z
@@ -35,6 +34,47 @@ public class HandleShardingParam {
      * @return
      */
     private int priority;
+
+    /**
+     * 调度周期
+     */
+    private TimeUnit schedulingCycle;
+
+    /**
+     * 调度间隔
+     */
+    private int schedulingInterval;
+
+    /**
+     * 调度的首次时间
+     */
+    private String firstSchedulingTime;
+
+    /**
+     * 调度的截止时间
+     */
+    private String schedulingDeadline;
+
+    /**
+     * 数据的开始时间
+     */
+    private String startTimeOfData;
+
+    /**
+     * 数据的截止时间
+     */
+    private String endTimeOfData;
+
+    /**
+     * 数据时间间隔
+     */
+    private int dataInterval;
+
+    /**
+     * 数据时间间隔单位
+     */
+    private TimeUnit timeUnit;
+
 
     public int getPriority() {
         return priority;
@@ -140,44 +180,5 @@ public class HandleShardingParam {
         this.timeUnit = timeUnit;
     }
 
-    /**
-     * 调度周期
-     */
-    private TimeUnit schedulingCycle;
-
-    /**
-     * 调度间隔
-     */
-    private int schedulingInterval;
-
-    /**
-     * 调度的首次时间
-     */
-    private String firstSchedulingTime;
-
-    /**
-     * 调度的截止时间
-     */
-    private String schedulingDeadline;
-
-    /**
-     * 数据的开始时间
-     */
-    private String startTimeOfData;
-
-    /**
-     * 数据的截止时间
-     */
-    private String endTimeOfData;
-
-    /**
-     * 数据时间间隔
-     */
-    private int dataInterval;
-
-    /**
-     * 数据时间间隔单位
-     */
-    private TimeUnit timeUnit;
 
 }

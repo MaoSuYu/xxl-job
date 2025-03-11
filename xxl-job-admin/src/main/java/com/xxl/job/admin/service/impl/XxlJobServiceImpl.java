@@ -35,6 +35,7 @@ import org.springframework.stereotype.Service;
 
 import java.text.MessageFormat;
 import java.util.*;
+import java.util.regex.Pattern;
 
 /**
  * core job action for xxl-job
@@ -467,6 +468,78 @@ public class XxlJobServiceImpl implements XxlJobService {
 			throw new IllegalArgumentException("任务参数不能为空！");
 		}
 		// 其他参数校验逻辑
+		// 校验任务ID
+		if (handleShardingParam.getId() == null) {
+			throw new IllegalArgumentException("任务ID不能为空");
+		}
+
+		// 校验执行器服务名称
+		if (handleShardingParam.getAppName() == null || handleShardingParam.getAppName().trim().isEmpty()) {
+			throw new IllegalArgumentException("执行器服务名称不能为空");
+		}
+
+		// 校验执行方法
+		if (handleShardingParam.getExecuteHandle() == null || handleShardingParam.getExecuteHandle().trim().isEmpty()) {
+			throw new IllegalArgumentException("执行方法不能为空");
+		}
+
+		// 校验是否手动触发
+		if (ObjectUtils.isEmpty(handleShardingParam.getIsAutomatic())||(handleShardingParam.getIsAutomatic() != 0 && handleShardingParam.getIsAutomatic() != 1)) {
+			throw new IllegalArgumentException("是否手动触发值必须为0或1");
+		}
+
+		// 校验优先级
+		if (handleShardingParam.getIsAutomatic() == 1 && (handleShardingParam.getPriority() < 0||handleShardingParam.getPriority()>10)) {
+			throw new IllegalArgumentException("优先级必须大于或等于0,小于10");
+		}
+
+		// 校验调度周期
+		if (handleShardingParam.getSchedulingCycle() == null) {
+			throw new IllegalArgumentException("调度周期不能为空");
+		}
+
+		// 校验调度间隔
+		if (ObjectUtils.isEmpty(handleShardingParam.getSchedulingInterval())||handleShardingParam.getSchedulingInterval() <= 0) {
+			throw new IllegalArgumentException("调度间隔必须大于0");
+		}
+
+		// 校验时间格式
+		String timePattern = "^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$";
+		if (handleShardingParam.getFirstSchedulingTime() != null && !Pattern.matches(timePattern, handleShardingParam.getFirstSchedulingTime())) {
+			throw new IllegalArgumentException("首次调度时间格式必须为yyyy-MM-dd HH:mm:ss");
+		}
+		if (handleShardingParam.getSchedulingDeadline() != null && !Pattern.matches(timePattern, handleShardingParam.getSchedulingDeadline())) {
+			throw new IllegalArgumentException("调度截止时间格式必须为yyyy-MM-dd HH:mm:ss");
+		}
+		if (handleShardingParam.getStartTimeOfData() != null && !Pattern.matches(timePattern, handleShardingParam.getStartTimeOfData())) {
+			throw new IllegalArgumentException("数据开始时间格式必须为yyyy-MM-dd HH:mm:ss");
+		}
+		if (handleShardingParam.getEndTimeOfData() != null && !Pattern.matches(timePattern, handleShardingParam.getEndTimeOfData())) {
+			throw new IllegalArgumentException("数据截止时间格式必须为yyyy-MM-dd HH:mm:ss");
+		}
+
+		// 校验数据时间间隔
+		if (ObjectUtils.isEmpty(handleShardingParam.getDataInterval())&&handleShardingParam.getDataInterval() <= 0) {
+			throw new IllegalArgumentException("数据时间间隔必须大于0");
+		}
+
+		// 校验数据时间间隔单位
+		if (handleShardingParam.getTimeUnit() == null) {
+			throw new IllegalArgumentException("数据时间间隔单位不能为空");
+		}
+
+		// 校验时间顺序
+		if (handleShardingParam.getFirstSchedulingTime() != null && handleShardingParam.getSchedulingDeadline() != null) {
+			if (handleShardingParam.getFirstSchedulingTime().compareTo(handleShardingParam.getSchedulingDeadline()) > 0) {
+				throw new IllegalArgumentException("首次调度时间不能晚于调度截止时间");
+			}
+		}
+
+		if (handleShardingParam.getStartTimeOfData() != null && handleShardingParam.getEndTimeOfData() != null) {
+			if (handleShardingParam.getStartTimeOfData().compareTo(handleShardingParam.getEndTimeOfData()) > 0) {
+				throw new IllegalArgumentException("数据开始时间不能晚于数据截止时间");
+			}
+		}
 	}
 
 	// 获取执行器信息
