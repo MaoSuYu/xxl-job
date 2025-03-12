@@ -1,5 +1,7 @@
 package com.xxl.job.admin.core.route.strategy;
 
+import com.xxl.job.admin.core.conf.XxlJobAdminConfig;
+import com.xxl.job.admin.core.model.XxlJobGroup;
 import com.xxl.job.admin.core.model.XxlJobTaskExecutorMapping;
 import com.xxl.job.admin.core.route.ExecutorRouter;
 import com.xxl.job.admin.core.scheduler.XxlJobScheduler;
@@ -10,7 +12,9 @@ import com.xxl.job.admin.util.SpringContextUtil;
 import com.xxl.job.core.biz.model.ExecutorStatus;
 import com.xxl.job.core.biz.model.ReturnT;
 import com.xxl.job.core.biz.model.TriggerParam;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.util.CollectionUtils;
 
 import java.sql.Date;
 import java.util.List;
@@ -71,11 +75,69 @@ public class IdleThreadBasedTaskAllocator extends ExecutorRouter {
 
                 xxlJobTaskExecutorMappingMapper.saveOrUpdate(mapping);
                 logger.info("更新任务执行器映射 [任务ID:{}] [执行器:{}] [执行器组ID:{}] [AppName:{}] [名称:{}]",
-                    jobId, executorAddress, groupId, appName, title);
+                        jobId, executorAddress, groupId, appName, title);
             } catch (Exception e) {
                 logger.error("更新任务执行器映射失败 [任务ID:{}] [执行器:{}] [异常:{}]", jobId, executorAddress, e.getMessage());
             }
         });
+    }
+
+    /**
+     * 根据执行器组选择ip地址
+     *
+     * @param groupName
+     * @return
+     */
+    public static String choiceIP(String groupName) {
+        if (StringUtils.isBlank(groupName)) {
+            return null;
+        }
+        XxlJobGroup xxlJobGroup = XxlJobAdminConfig.getAdminConfig().getXxlJobGroupDao().loadByAppName(groupName);
+        if (Objects.isNull(xxlJobGroup)) {
+            return null;
+        }
+        // 拿到所有IP地址
+        List<String> registryList = xxlJobGroup.getRegistryList();
+        if (CollectionUtils.isEmpty(registryList)) {
+            return null;
+        }
+
+        return findIdleExecutor(registryList);
+    }
+
+    /**
+     * 从执行器列表中查找有空闲线程的执行器IP
+     *
+     * @param registryList 执行器IP列表
+     * @return 有空闲线程的执行器IP，如果没有找到则返回null
+     */
+    public static String findIdleExecutor(List<String> registryList) {
+        if (CollectionUtils.isEmpty(registryList)) {
+            return null;
+        }
+
+        String ip = null;
+        try {
+            // 遍历ip，选择ip
+            for (String address : registryList) {
+                ReturnT<ExecutorStatus> executorStatusResult = XxlJobScheduler.getExecutorBiz(address).status();
+                ExecutorStatus content = executorStatusResult.getContent();
+                int threadCount = content.getThreadCount();
+                int pendingTaskCount = content.getPendingTaskCount();
+                int runningTaskCount = content.getRunningTaskCount();
+                int remainingThreadCount = threadCount - (pendingTaskCount + runningTaskCount);
+                // 有空闲节点直接退出
+                if (remainingThreadCount > 0) {
+                    ip = address;
+                    break;
+                }
+                // 继续检查下一个IP
+            }
+            return ip;
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            return null;
+        }
     }
 
     @Override
@@ -100,9 +162,9 @@ public class IdleThreadBasedTaskAllocator extends ExecutorRouter {
             int remainingThreadCount = threadCount - (pendingTaskCount + runningTaskCount);
 
             logger.info("执行器状态 [任务ID:{}] [地址:{}] [总线程:{}] [运行:{}] [等待:{}] [可用:{}]",
-                jobId, address, threadCount, runningTaskCount, pendingTaskCount, remainingThreadCount);
+                    jobId, address, threadCount, runningTaskCount, pendingTaskCount, remainingThreadCount);
 
-            idleBeatResultSB.append((idleBeatResultSB.length()>0)?"<br><br>":"")
+            idleBeatResultSB.append((idleBeatResultSB.length() > 0) ? "<br><br>" : "")
                     .append(I18nUtil.getString("jobconf_idleBeat") + "：")
                     .append("<br>address：").append(address)
                     .append("<br>code：").append(executorStatusResult.getCode())
