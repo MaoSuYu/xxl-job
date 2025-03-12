@@ -82,7 +82,7 @@ public class IdleThreadBasedTaskAllocator extends ExecutorRouter {
     public ReturnT<String> route(TriggerParam triggerParam, List<String> addressList) {
         StringBuffer idleBeatResultSB = new StringBuffer();
         Long jobId = triggerParam.getJobId();
-        logger.info("任务分配开始 [任务ID:{}] [执行器列表:{}]", jobId, addressList);
+        //logger.info("任务分配开始 [任务ID:{}] [执行器列表:{}]", jobId, addressList);
 
         for (String address : addressList) {
             ReturnT<ExecutorStatus> executorStatusResult;
