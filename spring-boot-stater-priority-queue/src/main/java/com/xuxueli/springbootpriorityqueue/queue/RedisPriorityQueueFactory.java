@@ -12,7 +12,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * Redis优先级队列工厂类
  * 用于创建或获取不同类型和名称的优先级队列实例
  */
-@Component
+// @Component  // 注释掉此注解，由RedisConfig类中的@Bean定义提供实例
 public class RedisPriorityQueueFactory {
 
     private final RedisTemplate<String, Object> redisTemplate;
