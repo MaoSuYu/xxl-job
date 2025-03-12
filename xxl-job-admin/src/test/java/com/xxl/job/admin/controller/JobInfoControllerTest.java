@@ -142,8 +142,8 @@ public class JobInfoControllerTest extends AbstractSpringMvcTest {
     HandleShardingParam handleShardingParam = new HandleShardingParam();
     handleShardingParam.setSchedulingInterval(1);//调度间隔
     handleShardingParam.setSchedulingCycle(TimeUnit.MINUTE);//
-    handleShardingParam.setFirstSchedulingTime("2025-03-12 09:27:30");// 调度的首次时间
-    handleShardingParam.setSchedulingDeadline("2025-03-12 09:29:30");// 调度的截止时间
+    handleShardingParam.setFirstSchedulingTime("2025-03-12 09:43:30");// 调度的首次时间
+    handleShardingParam.setSchedulingDeadline("2025-03-12 09:47:30");// 调度的截止时间
     handleShardingParam.setStartTimeOfData("2023-10-05 14:30:45");// 数据的开始时间
     handleShardingParam.setEndTimeOfData("2023-10-05 14:40:45");// 数据时间间隔
     handleShardingParam.setDataInterval(1);// 数据时间间隔
