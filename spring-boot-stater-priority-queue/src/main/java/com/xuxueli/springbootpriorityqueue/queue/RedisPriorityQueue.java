@@ -13,6 +13,7 @@ import org.springframework.data.redis.core.script.DefaultRedisScript;
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -97,7 +98,9 @@ public class RedisPriorityQueue<T> {
                 long timestamp = System.currentTimeMillis() % 1000000;
                 double score = priority + (timestamp / 1000000.0) + (sequence / 1000000000.0);
                 
-                logger.debug("添加任务，优先级: {}, 计算分数: {}", priority, score);
+                // 增加更详细的压栈日志
+                logger.info("【压栈操作】队列: {}, 优先级: {}, 计算分数: {} (优先级部分:{}, 时间戳部分:{}, 序列号部分:{}), 元素内容: {}", 
+                        queueKey, priority, score, priority, timestamp / 1000000.0, sequence / 1000000000.0, itemJson);
                 
                 // 使用Redis事务确保操作完整性
                 Boolean result = redisTemplate.execute(new SessionCallback<Boolean>() {
@@ -116,7 +119,9 @@ public class RedisPriorityQueue<T> {
                 });
                 
                 if (result != null && result) {
-                    logger.debug("添加任务成功，优先级: {}, 计算分数: {}", priority, score);
+                    // 增加压栈成功日志
+                    logger.info("【压栈成功】队列: {}, 优先级: {}, 元素内容: {}, 当前队列长度: {}", 
+                            queueKey, priority, itemJson, redisTemplate.opsForZSet().size(queueKey));
                     return true;
                 } else {
                     logger.warn("添加任务失败，优先级: {}, 等待{}ms后重试, 当前尝试次数: {}/{}", 
@@ -228,7 +233,9 @@ public class RedisPriorityQueue<T> {
         for (int attempt = 0; attempt < MAX_RETRY; attempt++) {
             try {
                 Long size = redisTemplate.opsForZSet().size(queueKey);
-                return size != null ? size : 0;
+                long result = size != null ? size : 0;
+                logger.info("【队列长度】队列: {}, 当前元素数量: {}", queueKey, result);
+                return result;
             } catch (Exception e) {
                 logger.warn("获取队列长度时出错，等待{}ms后重试，当前尝试次数: {}/{}", 
                         RETRY_DELAY_MS, attempt + 1, MAX_RETRY, e);
@@ -260,6 +267,7 @@ public class RedisPriorityQueue<T> {
      * @return 操作是否成功
      */
     public boolean clear() {
+        logger.info("【清空队列】准备清空队列: {}", queueKey);
         for (int attempt = 0; attempt < MAX_RETRY; attempt++) {
             try {
                 Boolean result = redisTemplate.delete(queueKey);
