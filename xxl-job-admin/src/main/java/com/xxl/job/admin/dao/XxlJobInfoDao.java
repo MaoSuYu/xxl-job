@@ -75,7 +75,7 @@ public interface XxlJobInfoDao {
 	 * 批量查询jobId对应的执行器组title
 	 *
 	 * @param jobIds 任务ID集合
-	 * @return Map<jobId, title>
+	 * @return Map&lt;jobId, title&gt;
 	 */
 	public List<Map<String, Object>> batchGetGroupTitleByJobIds(@Param("jobIds") List<Long> jobIds);
 

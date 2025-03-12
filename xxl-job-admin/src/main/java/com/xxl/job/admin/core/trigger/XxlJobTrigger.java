@@ -40,7 +40,7 @@ public class XxlJobTrigger {
      * @param jobId
      * @param triggerType
      * @param failRetryCount        >=0: use this param
-     *                              <0: use param from job info config
+     *                              &lt;0: use param from job info config
      * @param executorShardingParam
      * @param executorParam         null: use job param
      *                              not null: cover job param
@@ -104,7 +104,7 @@ public class XxlJobTrigger {
      * @param jobId
      * @param triggerType
      * @param failRetryCount        >=0: use this param
-     *                              <0: use param from job info config
+     *                              &lt;0: use param from job info config
      * @param executorShardingParam
      * @param executorParam         null: use job param
      *                              not null: cover job param
