@@ -41,6 +41,9 @@
 		<result column="scheduling_dead_line" property="schedulingDeadline" />
 		<result column="data_interval" property="dataInterval" />
 		<result column="time_unit" property="timeUnit" />
+		<result column="priority" property="priority" />
+		<result column="is_automatic" property="isAutomatic" />
+		<result column="remote_id" property="remoteId" />
 	</resultMap>
 
 	<sql id="Base_Column_List1">
@@ -74,7 +77,8 @@
 		t.data_interval,
 		t.time_unit,
 		t.priority,
-		t.is_automatic
+		t.is_automatic,
+		t.remote_id
 	</sql>
 
 	<sql id="Base_Column_List">
@@ -107,7 +111,8 @@
 		t.data_interval,
 		t.time_unit,
 		t.priority,
-		t.is_automatic
+		t.is_automatic,
+		t.remote_id
 		</sql>
 
 	<select id="pageList" parameterType="java.util.HashMap" resultMap="XxlJobInfo">
@@ -187,7 +192,8 @@
 		    data_interval,
 		    time_unit,
 		    priority,
-		    is_automatic
+		    is_automatic,
+			remote_id
 		) VALUES (
 		    #{id},
 			#{jobGroup},
@@ -218,7 +224,8 @@
 		    #{dataInterval},
 		    #{timeUnit},
 			#{priority},
-			#{isAutomatic}
+			#{isAutomatic},
+			#{remoteId}
 		);
 		<!--<selectKey resultType="java.lang.Integer" order="AFTER" keyProperty="id">
 			SELECT LAST_INSERT_ID()
@@ -287,6 +294,7 @@
 		LIMIT #{pagesize}
 	</select>
 
+
 	<update id="scheduleUpdate" parameterType="com.xxl.job.admin.core.model.XxlJobInfo"  >
 		UPDATE xxl_job_info
 		SET
@@ -331,13 +339,21 @@
 
 	<select id="loadByShardingId" resultMap="XxlJobInfo">
 		select <include refid="Base_Column_List1" /> from  xxl_job_info  t
-					left join xxl_job_sharding_info xjsi on xjsi.parent_job_id = t.id
-		where xjsi.delete_flag = 0 and xjsi.id = #{jobId}
+					left join xxl_job_sharding_info xjsi on xjsi.parent_job_id = t.remote_id
+		where xjsi.delete_flag = 0 and xjsi.id = #{jobId} and t.is_automatic = #{isAutomatic}  and xjsi.is_automatic =#{isAutomatic}
 	</select>
 
 	<select id="findListByParentJobId" resultMap="XxlJobInfo">
 		select <include refid="Base_Column_List1" /> from  xxl_job_info  t
-		left join xxl_job_sharding_info xjsi on xjsi.parent_job_id = t.id
-		where xjsi.delete_flag = 0 and t.id = #{jobId}  and t.is_automatic =#{isAutomatic}
+		left join xxl_job_sharding_info xjsi on xjsi.parent_job_id = t.remote_id
+		where xjsi.delete_flag = 0 and t.id = #{jobId}  and t.is_automatic =#{isAutomatic} and xjsi.is_automatic =#{isAutomatic}
 	</select>
+
+	<delete id="deleteByRemoteId">
+		DELETE
+		FROM xxl_job_info
+		WHERE remote_id = #{remoteId} and is_automatic = #{isAutomatic}
+	</delete>
+
+
 </mapper>

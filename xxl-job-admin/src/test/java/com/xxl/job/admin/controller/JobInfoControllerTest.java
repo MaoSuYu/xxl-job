@@ -8,6 +8,7 @@ import com.xxl.job.admin.service.impl.LoginService;
 import com.xxl.job.admin.service.impl.XxlJobServiceImpl;
 import com.xxl.job.core.biz.model.HandleShardingParam;
 import com.xxl.job.core.enums.TimeUnit;
+import com.xxl.job.core.util.DateUtil;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -80,6 +81,7 @@ public class JobInfoControllerTest extends AbstractSpringMvcTest {
     handleShardingParam.setExecuteHandle("demoJobHandler");
 
     xxlJobServiceImpl.ShardingTrigger(handleShardingParam);
+    //java.util.concurrent.TimeUnit.SECONDS.sleep(30);
   }
 
 
@@ -142,11 +144,11 @@ public class JobInfoControllerTest extends AbstractSpringMvcTest {
     HandleShardingParam handleShardingParam = new HandleShardingParam();
     handleShardingParam.setSchedulingInterval(1);//调度间隔
     handleShardingParam.setSchedulingCycle(TimeUnit.MINUTE);//
-    handleShardingParam.setFirstSchedulingTime("2025-03-12 09:43:30");// 调度的首次时间
-    handleShardingParam.setSchedulingDeadline("2025-03-12 09:47:30");// 调度的截止时间
+    handleShardingParam.setFirstSchedulingTime("2025-03-12 15:02:30");// 调度的首次时间
+    handleShardingParam.setSchedulingDeadline("2025-03-12 15:06:30");// 调度的截止时间
     handleShardingParam.setStartTimeOfData("2023-10-05 14:30:45");// 数据的开始时间
     handleShardingParam.setEndTimeOfData("2023-10-05 14:40:45");// 数据时间间隔
-    handleShardingParam.setDataInterval(1);// 数据时间间隔
+    handleShardingParam.setDataInterval(2);// 数据时间间隔
     handleShardingParam.setTimeUnit(TimeUnit.MINUTE);
     handleShardingParam.setAppName("normal");// 执行器服务名称
     handleShardingParam.setId(1897554446039736320l);// 任务id
@@ -155,6 +157,7 @@ public class JobInfoControllerTest extends AbstractSpringMvcTest {
     handleShardingParam.setExecuteHandle("demoJobHandler");
 
     xxlJobServiceImpl.ShardingTrigger(handleShardingParam);
+
   }
 
 @Test

@@ -119,7 +119,7 @@ public class XxlJobTrigger {
                                        String addressList, int isAutomatic) {
         XxlJobInfo jobInfo = XxlJobAdminConfig.getAdminConfig().getXxlJobInfoDao().loadByShardingId(jobId, isAutomatic);
         if (jobInfo == null) {
-            logger.warn(">>>>>>>>>>>> trigger fail, jobId invalid，jobId={}", jobId);
+            logger.warn(">>>>>>>>>>>> trigger sharding fail, jobId invalid，jobId={}", jobId);
             return;
         }
         if (executorParam != null) {

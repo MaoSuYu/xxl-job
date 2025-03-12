@@ -62,26 +62,17 @@ public class TaskQueueHelper implements ApplicationRunner {
                 while (!sortTaskThreadToStop) {
                     try {
                         // 先通过路由策略是否可以找到执行器，找到了再取队列的子任务执行
-                        IdleThreadBasedTaskAllocator idleThreadBasedTaskAllocator = new IdleThreadBasedTaskAllocator();
-                        XxlJobGroup xxlJobGroup = XxlJobAdminConfig.getAdminConfig().getXxlJobGroupDao().loadByAppName("vip-executor");
-                        if (ObjectUtils.isEmpty(xxlJobGroup)|| StrUtil.isBlank(xxlJobGroup.getAddressList())){
+                        String address = IdleThreadBasedTaskAllocator.choiceIP("vip-executor");
+                        if (StrUtil.isBlank(address)){
                             TimeUnit.SECONDS.sleep(5);
                             continue;
                         }
-                        List<String> list = Stream.of(xxlJobGroup.getAddressList().split(","))
-                                .collect(Collectors.toList());
-                        ReturnT<String> routeAddressResult = idleThreadBasedTaskAllocator.route(new TriggerParam(), list);
-                        if (routeAddressResult.getCode() != ReturnT.SUCCESS_CODE){
-                            TimeUnit.SECONDS.sleep(1);
-                            continue;
-                        }
-
-                        String address = routeAddressResult.getContent();
 
                         // 获取并执行任务
                         SortedTask nextTask = taskService.getNextTask();
                         if (nextTask != null) {
                             try {
+                                TimeUnit.SECONDS.sleep(1);
                                 String id = nextTask.getId();
                                 JobTriggerPoolHelper.triggerSharding(Long.parseLong(id), TriggerTypeEnum.MANUAL, -1, null, null, address,0);
                             } catch (Exception e) {
@@ -112,25 +103,17 @@ public class TaskQueueHelper implements ApplicationRunner {
                 while (!taskThreadToStop) {
                     try {
                         // 先通过路由策略是否可以找到执行器，找到了再取队列的子任务执行
-                        IdleThreadBasedTaskAllocator idleThreadBasedTaskAllocator = new IdleThreadBasedTaskAllocator();
-                        XxlJobGroup xxlJobGroup = XxlJobAdminConfig.getAdminConfig().getXxlJobGroupDao().loadByAppName("normal");
-                        if (ObjectUtils.isEmpty(xxlJobGroup)|| StrUtil.isBlank(xxlJobGroup.getAddressList())){
+                        String address = IdleThreadBasedTaskAllocator.choiceIP("normal");
+                        if (StrUtil.isBlank(address)){
                             TimeUnit.SECONDS.sleep(5);
                             continue;
                         }
-                        List<String> list = Stream.of(xxlJobGroup.getAddressList().split(","))
-                                .collect(Collectors.toList());
-                        ReturnT<String> routeAddressResult = idleThreadBasedTaskAllocator.route(new TriggerParam(), list);
-                        if (routeAddressResult.getCode() != ReturnT.SUCCESS_CODE){
-                            TimeUnit.SECONDS.sleep(1);
-                            continue;
-                        }
 
-                        String address = routeAddressResult.getContent();
                         // 获取并执行排序任务
                         Task nextTask = taskService.getNextTask();
                         if (nextTask != null) {
                             try {
+                                TimeUnit.SECONDS.sleep(1);
                                 String id = nextTask.getId();
                                 JobTriggerPoolHelper.triggerSharding(Long.parseLong(id), TriggerTypeEnum.MANUAL, -1, null, null, address,1);
                             } catch (Exception e) {

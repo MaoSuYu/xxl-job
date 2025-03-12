@@ -18,17 +18,17 @@
     </insert>
 
     <insert id="bathSave" parameterType="java.util.List">
-        INSERT INTO xxl_job_sharding_info (id, parent_job_id, params,trigger_time,execute_batch)
+        INSERT INTO xxl_job_sharding_info (id, parent_job_id, params,trigger_time,execute_batch,is_automatic)
         VALUES
         <foreach collection="list" item="item" separator=",">
-            (#{item.id}, #{item.parentJobId}, #{item.params}, #{item.triggerTime},#{item.executeBatch})
+            (#{item.id}, #{item.parentJobId}, #{item.params}, #{item.triggerTime},#{item.executeBatch},#{item.isAutomatic})
         </foreach>
     </insert>
 
     <delete id="logicDeleteByParentId">
         UPDATE xxl_job_sharding_info
         SET  delete_flag= 1
-        WHERE parent_job_id = #{id};
+        WHERE parent_job_id = #{id} and is_automatic = #{isAutomatic};
     </delete>
 
 <!--    <select id="findListByParentJobId" resultType="com.xxl.job.admin.core.model.XxlJobShardingInfo">-->

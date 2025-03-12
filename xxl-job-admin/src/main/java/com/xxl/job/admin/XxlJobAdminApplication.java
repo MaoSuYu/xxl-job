@@ -1,6 +1,5 @@
 package com.xxl.job.admin;
 
-import com.xxl.job.admin.core.thread.TaskQueueHelper;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;

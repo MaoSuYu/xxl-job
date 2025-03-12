@@ -1,5 +1,6 @@
 package com.xxl.job.admin.core.route.strategy;
 
+import cn.hutool.core.util.StrUtil;
 import com.xxl.job.admin.core.conf.XxlJobAdminConfig;
 import com.xxl.job.admin.core.model.XxlJobGroup;
 import com.xxl.job.admin.core.model.XxlJobTaskExecutorMapping;
@@ -12,7 +13,6 @@ import com.xxl.job.admin.util.SpringContextUtil;
 import com.xxl.job.core.biz.model.ExecutorStatus;
 import com.xxl.job.core.biz.model.ReturnT;
 import com.xxl.job.core.biz.model.TriggerParam;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.util.CollectionUtils;
 
@@ -89,7 +89,7 @@ public class IdleThreadBasedTaskAllocator extends ExecutorRouter {
      * @return
      */
     public static String choiceIP(String groupName) {
-        if (StringUtils.isBlank(groupName)) {
+        if (StrUtil.isBlank(groupName)) {
             return null;
         }
         XxlJobGroup xxlJobGroup = XxlJobAdminConfig.getAdminConfig().getXxlJobGroupDao().loadByAppName(groupName);

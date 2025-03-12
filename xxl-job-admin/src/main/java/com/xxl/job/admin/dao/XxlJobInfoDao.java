@@ -85,4 +85,7 @@ public interface XxlJobInfoDao {
 
 
 	List<XxlJobInfo> findListByParentJobId(@Param("jobId") Long jobId, @Param("isAutomatic") int isAutomatic);
+
+	int deleteByRemoteId(@Param("remoteId") Long remoteId,@Param("isAutomatic") int isAutomatic);
+
 }

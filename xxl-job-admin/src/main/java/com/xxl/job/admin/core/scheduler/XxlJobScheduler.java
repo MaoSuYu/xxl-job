@@ -87,7 +87,7 @@ public class XxlJobScheduler  {
         JobTriggerPoolHelper.toStop();
 
         // 销毁
-        TaskQueueHelper.getInstance().toStop();
+        //TaskQueueHelper.getInstance().toStop();
     }
 
     /**

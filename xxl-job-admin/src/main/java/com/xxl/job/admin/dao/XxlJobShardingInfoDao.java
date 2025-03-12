@@ -17,7 +17,7 @@ public interface XxlJobShardingInfoDao {
 
     int bathSave(@Param("list") List<XxlJobShardingInfo> xxlJobShardingInfos);
 
-    int logicDeleteByParentId(@Param("id") Long id);
+    int logicDeleteByParentId(@Param("id") Long id,@Param("isAutomatic") int isAutomatic);
 
     //List<XxlJobShardingInfo> findListByParentJobId(@Param("id") Long id,@Param("isAutomatic") Integer isAutomatic);
 

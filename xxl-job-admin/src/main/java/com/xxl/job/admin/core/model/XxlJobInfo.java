@@ -84,6 +84,20 @@ public class XxlJobInfo {
 	 */
 	private int isAutomatic;
 
+	/**
+	 * 远程id*
+	 * @return
+	 */
+	private Long remoteId;
+
+	public Long getRemoteId() {
+		return remoteId;
+	}
+
+	public void setRemoteId(Long remoteId) {
+		this.remoteId = remoteId;
+	}
+
 	public int getIsAutomatic() {
 		return isAutomatic;
 	}
