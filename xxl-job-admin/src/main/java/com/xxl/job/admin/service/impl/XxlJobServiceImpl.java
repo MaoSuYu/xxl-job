@@ -23,6 +23,7 @@ import com.xxl.job.core.biz.model.ReturnT;
 import com.xxl.job.core.enums.ExecutionStatus;
 import com.xxl.job.core.enums.ExecutorBlockStrategyEnum;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 import com.xxl.job.core.glue.GlueTypeEnum;
 import com.xxl.job.core.util.DateUtil;
@@ -431,6 +432,9 @@ public class XxlJobServiceImpl implements XxlJobService {
         // 1. 参数校验
         validateParams(handleShardingParam);
 
+        // 1.1. 校验执行任务的状态，如果是进行中则不让修改
+        validateExecuteStatus(handleShardingParam);
+
         // 2. 获取执行器信息
         XxlJobGroup xxlJobGroup = getXxlJobGroup(handleShardingParam.getAppName());
         if (xxlJobGroup == null) {
@@ -465,6 +469,13 @@ public class XxlJobServiceImpl implements XxlJobService {
         triggerTask(xxlJobShardingInfos, handleShardingParam.getIsAutomatic());
 
         return ReturnT.SUCCESS;
+    }
+
+    private void validateExecuteStatus(HandleShardingParam handleShardingParam) {
+       List<XxlJobShardingInfo> xxlJobShardingInfos = XxlJobAdminConfig.getAdminConfig().getXxlJobShardingInfoDao().findTriggerringSharding(handleShardingParam.getId());
+       if (!CollectionUtils.isEmpty(xxlJobShardingInfos)){
+           throw new RuntimeException("该任务存在正在执行的任务！不允许执行");
+       }
     }
 
     // 参数校验
@@ -585,6 +596,8 @@ public class XxlJobServiceImpl implements XxlJobService {
         xxlJobInfo.setTriggerStatus(handleShardingParam.getIsAutomatic() == 1 ? 1 : 0);
         xxlJobInfo.setPriority(handleShardingParam.getPriority());
         xxlJobInfo.setIsAutomatic(handleShardingParam.getIsAutomatic() == 1 ? 1 : 0);
+        xxlJobInfo.setStartTimeOfData(handleShardingParam.getStartTimeOfData());
+        xxlJobInfo.setStartTimeOfData(handleShardingParam.getEndTimeOfData());
         return xxlJobInfo;
     }
 
@@ -615,11 +628,14 @@ public class XxlJobServiceImpl implements XxlJobService {
 
     // 保存任务信息
     private void saveTaskInfo(XxlJobInfo xxlJobInfo, List<XxlJobShardingInfo> xxlJobShardingInfos) {
+
         XxlJobAdminConfig.getAdminConfig().getXxlJobInfoDao().deleteByRemoteId(xxlJobInfo.getRemoteId(),xxlJobInfo.getIsAutomatic());
         XxlJobAdminConfig.getAdminConfig().getXxlJobInfoDao().save(xxlJobInfo);
-
-        XxlJobAdminConfig.getAdminConfig().getXxlJobShardingInfoDao().logicDeleteByParentId(xxlJobInfo.getRemoteId(),xxlJobInfo.getIsAutomatic());
-        XxlJobAdminConfig.getAdminConfig().getXxlJobShardingInfoDao().bathSave(xxlJobShardingInfos);
+        // 自动为1的情况是执行的时候再加数据库
+        if (xxlJobInfo.getIsAutomatic() == 0){
+            XxlJobAdminConfig.getAdminConfig().getXxlJobShardingInfoDao().logicDeleteByParentId(xxlJobInfo.getRemoteId(),xxlJobInfo.getIsAutomatic());
+            XxlJobAdminConfig.getAdminConfig().getXxlJobShardingInfoDao().bathSave(xxlJobShardingInfos);
+        }
     }
 
     // 触发任务
@@ -628,6 +644,7 @@ public class XxlJobServiceImpl implements XxlJobService {
             // 把子任务放队列
             for (XxlJobShardingInfo xxlJobShardingInfo : xxlJobShardingInfos) {
                 sortedTaskService.addTask(new SortedTask(xxlJobShardingInfo.getId().toString(), xxlJobShardingInfo.getJobDesc(), xxlJobShardingInfo.getJobDesc(), 0));
+                int i = XxlJobAdminConfig.getAdminConfig().getXxlJobShardingInfoDao().updateExecuteInfo(ExecutionStatus.TRIGGERRING.getCode(), xxlJobShardingInfo.getId());
             }
         }
     }

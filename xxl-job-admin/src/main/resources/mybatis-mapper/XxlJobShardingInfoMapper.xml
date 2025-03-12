@@ -18,10 +18,10 @@
     </insert>
 
     <insert id="bathSave" parameterType="java.util.List">
-        INSERT INTO xxl_job_sharding_info (id, parent_job_id, params,trigger_time,execute_batch,is_automatic)
+        INSERT INTO xxl_job_sharding_info (id, parent_job_id, params,trigger_time,execute_batch,execute_state,execute_number,is_automatic)
         VALUES
         <foreach collection="list" item="item" separator=",">
-            (#{item.id}, #{item.parentJobId}, #{item.params}, #{item.triggerTime},#{item.executeBatch},#{item.isAutomatic})
+            (#{item.id}, #{item.parentJobId}, #{item.params}, #{item.triggerTime},#{item.executeBatch},#{item.executeState},#{item.executeNumber},#{item.isAutomatic})
         </foreach>
     </insert>
 
@@ -44,6 +44,14 @@
     <update id="updateExecuteInfo">
         update xxl_job_sharding_info set execute_state =#{state}, execute_number = execute_number + 1 where id = #{id}
     </update>
+
+    <select id="findLastExecuteBatchByParentJobId" resultType="com.xxl.job.admin.core.model.XxlJobShardingInfo">
+        select * from xxl_job_sharding_info where parent_job_id = #{id} and is_automatic = #{isAutomatic};
+    </select>
+
+    <select id="findTriggerringSharding" resultType="com.xxl.job.admin.core.model.XxlJobShardingInfo">
+        select * from xxl_job_sharding_info where parent_job_id = #{id} and execute_state = 4 and delete_flag = 0
+    </select>
 
     <!--    <update id="updateTriggerInfo">-->
 <!--        update xxl_job_sharding_info set execute_state =#{state} ,  execute_number = execute_number + 1 where id = #{id}-->

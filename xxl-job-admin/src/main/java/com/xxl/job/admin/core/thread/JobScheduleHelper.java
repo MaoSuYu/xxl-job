@@ -1,6 +1,8 @@
 package com.xxl.job.admin.core.thread;
 
+import cn.hutool.core.util.IdUtil;
 import cn.hutool.extra.spring.SpringUtil;
+import cn.hutool.json.JSONUtil;
 import com.xuxueli.springbootpriorityqueue.model.Task;
 import com.xuxueli.springbootpriorityqueue.service.SortedTaskService;
 import com.xuxueli.springbootpriorityqueue.service.TaskService;
@@ -13,10 +15,14 @@ import com.xxl.job.admin.core.scheduler.ScheduleTypeEnum;
 import com.xxl.job.admin.core.trigger.TriggerTypeEnum;
 import com.xxl.job.admin.core.trigger.XxlJobTrigger;
 import com.xxl.job.admin.core.util.TimeConverterUtil;
+import com.xxl.job.admin.core.util.TimeRange;
+import com.xxl.job.admin.core.util.TimeRangeSplitterUtils;
 import com.xxl.job.core.context.XxlJobHelper;
+import com.xxl.job.core.enums.ExecutionStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
+import org.springframework.util.CollectionUtils;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -275,9 +281,46 @@ public class JobScheduleHelper {
     }
 
     private void getXxlJobInfosPushQueue(TaskService taskService,Long id) {
-        List<XxlJobInfo> listByIds = XxlJobAdminConfig.getAdminConfig().getXxlJobInfoDao().findListByParentJobId(id, 1);
-        for (XxlJobInfo shardingInfo : listByIds) {
-            taskService.addTask(new Task(shardingInfo.getId().toString(),shardingInfo.getJobDesc(),shardingInfo.getJobDesc()),shardingInfo.getPriority());
+
+        List <XxlJobShardingInfo> xxlJobShardingInfos = XxlJobAdminConfig.getAdminConfig().getXxlJobShardingInfoDao().findLastExecuteBatchByParentJobId(id,1);
+        if (!CollectionUtils.isEmpty(xxlJobShardingInfos)){
+            XxlJobAdminConfig.getAdminConfig().getXxlJobShardingInfoDao().logicDeleteByParentId(id,1);
+            xxlJobShardingInfos.forEach(e->{
+                e.setId(IdUtil.getSnowflakeNextId());
+                e.setExecuteBatch(e.getExecuteState()+1);
+                e.setExecuteNumber(e.getExecuteNumber()+1);
+                e.setExecuteState(ExecutionStatus.TRIGGERRING.getCode());
+            }
+            );
+        } else {
+            XxlJobInfo xxlJobInfo = XxlJobAdminConfig.getAdminConfig().getXxlJobInfoDao().loadById(id);
+            String startTimeOfData = xxlJobInfo.getStartTimeOfData();
+            String endTimeOfData = xxlJobInfo.getEndTimeOfData();
+            int dataInterval = xxlJobInfo.getDataInterval();
+            String timeUnit = xxlJobInfo.getTimeUnit();
+            // 解析时间范围
+            List<TimeRange> timeRanges = TimeRangeSplitterUtils.splitTimeRange(
+                    startTimeOfData,
+                    endTimeOfData,
+                    dataInterval,
+                    timeUnit
+            );
+            for (TimeRange timeRange : timeRanges) {
+                XxlJobShardingInfo shardingInfoInsert = new XxlJobShardingInfo();
+                BeanUtils.copyProperties(xxlJobInfo,shardingInfoInsert);
+                shardingInfoInsert.setId(IdUtil.getSnowflakeNextId());
+                shardingInfoInsert.setExecuteBatch(1);
+                shardingInfoInsert.setExecuteNumber(1);
+                shardingInfoInsert.setParentJobId(xxlJobInfo.getRemoteId());
+                shardingInfoInsert.setParams(JSONUtil.toJsonStr(timeRange));
+                shardingInfoInsert.setExecuteState(ExecutionStatus.TRIGGERRING.getCode());
+                shardingInfoInsert.setIsAutomatic(1);
+                xxlJobShardingInfos.add(shardingInfoInsert);
+            }
+        }
+        XxlJobAdminConfig.getAdminConfig().getXxlJobShardingInfoDao().bathSave(xxlJobShardingInfos);
+        for (XxlJobShardingInfo xxlJobShardingInfo : xxlJobShardingInfos) {
+            taskService.addTask(new Task(xxlJobShardingInfo.getId().toString(),xxlJobShardingInfo.getJobDesc(),xxlJobShardingInfo.getJobDesc()),xxlJobShardingInfo.getPriority());
         }
     }
 

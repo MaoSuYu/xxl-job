@@ -25,6 +25,10 @@ public interface XxlJobShardingInfoDao {
 
     int updateExecuteInfo(@Param("state") int state,@Param("id") Long id);
 
+    List<XxlJobShardingInfo> findLastExecuteBatchByParentJobId(@Param("id")Long id,@Param("isAutomatic") int i);
+
+    List<XxlJobShardingInfo> findTriggerringSharding(@Param("id") Long id);
+
 
     //int updateTriggerInfo(@Param("state") int state,@Param("id") Long id);
 }

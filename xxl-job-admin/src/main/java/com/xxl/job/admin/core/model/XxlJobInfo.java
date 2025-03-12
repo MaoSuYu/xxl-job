@@ -90,6 +90,34 @@ public class XxlJobInfo {
 	 */
 	private Long remoteId;
 
+	/**
+	 * 开始数据时间范围*
+	 * @return
+	 */
+	private String startTimeOfData;
+
+	/**
+	 * 结束数据时间范围*
+	 * @return
+	 */
+	private String endTimeOfData;
+
+	public String getStartTimeOfData() {
+		return startTimeOfData;
+	}
+
+	public void setStartTimeOfData(String startTimeOfData) {
+		this.startTimeOfData = startTimeOfData;
+	}
+
+	public String getEndTimeOfData() {
+		return endTimeOfData;
+	}
+
+	public void setEndTimeOfData(String endTimeOfData) {
+		this.endTimeOfData = endTimeOfData;
+	}
+
 	public Long getRemoteId() {
 		return remoteId;
 	}
