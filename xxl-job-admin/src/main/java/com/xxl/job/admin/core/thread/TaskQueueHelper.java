@@ -65,14 +65,14 @@ public class TaskQueueHelper implements ApplicationRunner {
                         IdleThreadBasedTaskAllocator idleThreadBasedTaskAllocator = new IdleThreadBasedTaskAllocator();
                         XxlJobGroup xxlJobGroup = XxlJobAdminConfig.getAdminConfig().getXxlJobGroupDao().loadByAppName("vip-executor");
                         if (ObjectUtils.isEmpty(xxlJobGroup)|| StrUtil.isBlank(xxlJobGroup.getAddressList())){
-                            TimeUnit.MILLISECONDS.sleep(100);
+                            TimeUnit.SECONDS.sleep(5);
                             continue;
                         }
                         List<String> list = Stream.of(xxlJobGroup.getAddressList().split(","))
                                 .collect(Collectors.toList());
                         ReturnT<String> routeAddressResult = idleThreadBasedTaskAllocator.route(new TriggerParam(), list);
                         if (routeAddressResult.getCode() != ReturnT.SUCCESS_CODE){
-                            TimeUnit.MILLISECONDS.sleep(100);
+                            TimeUnit.SECONDS.sleep(1);
                             continue;
                         }
 
@@ -122,7 +122,7 @@ public class TaskQueueHelper implements ApplicationRunner {
                                 .collect(Collectors.toList());
                         ReturnT<String> routeAddressResult = idleThreadBasedTaskAllocator.route(new TriggerParam(), list);
                         if (routeAddressResult.getCode() != ReturnT.SUCCESS_CODE){
-                            TimeUnit.MILLISECONDS.sleep(1000);
+                            TimeUnit.SECONDS.sleep(1);
                             continue;
                         }
 

@@ -23,7 +23,6 @@ CREATE TABLE `xxl_job_sharding_info`
   COLLATE = utf8mb4_unicode_ci;
 
 
-
 CREATE TABLE `xxl_job_info`
 (
     `id`                        int(11)      NOT NULL AUTO_INCREMENT,
