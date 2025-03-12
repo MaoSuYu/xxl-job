@@ -53,6 +53,8 @@ CREATE TABLE `xxl_job_info`
 
 ALTER TABLE `xxl_job_info`
     ADD COLUMN `first_scheduling_time` datetime DEFAULT NULL COMMENT '首次调度时间',
+    ADD COLUMN `start_time_of_data` datetime DEFAULT NULL COMMENT '数据开始时间',
+    ADD COLUMN `end_time_of_data` datetime DEFAULT NULL COMMENT '数据截止时间',
     ADD COLUMN `scheduling_dead_line` datetime DEFAULT NULL COMMENT '截止调度时间',
     ADD COLUMN `data_interval` int(11) DEFAULT NULL COMMENT '数据间隔',
     ADD COLUMN `time_unit` varchar(50) DEFAULT NULL COMMENT '数据时间单位MINUTE, HOUR, DAY, WEEK, MONTH',
